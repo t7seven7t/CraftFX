@@ -1,0 +1,12 @@
+name: CraftFX
+version: "${project.version}"
+main: net.t7seven7t.craftfx.CraftFX
+description: >
+             CraftFX allows new custom item creation along with customizable effects and recipes.
+depend: []
+softdepend: []
+description: ""
+author: "t7seven7t"
+load: postworld
+#commands:
+#permissions:
