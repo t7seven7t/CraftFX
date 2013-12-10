@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2013 t7seven7t
  */
-package net.t7seven7t.craftfx;
+package net.t7seven7t.craftfx.item;
 
 import java.util.Collections;
 import java.util.List;
@@ -13,7 +13,8 @@ import org.bukkit.inventory.Recipe;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import net.t7seven7t.craftfx.effects.Effect;
+import net.t7seven7t.craftfx.Trigger;
+import net.t7seven7t.craftfx.effect.Effect;
 
 /**
  * @author t7seven7t
@@ -27,7 +28,7 @@ public class ItemData {
 	boolean cooldownMessage;
 	List<Recipe> recipes;
 	
-	ItemData(final ItemStack item) {
+	public ItemData(final ItemStack item) {
 		this.item = item;
 		
 		this.effectMap = Maps.newHashMap();

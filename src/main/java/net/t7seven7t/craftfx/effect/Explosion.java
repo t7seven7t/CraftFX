@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2013 t7seven7t
  */
-package net.t7seven7t.craftfx.effects;
+package net.t7seven7t.craftfx.effect;
 
 import net.t7seven7t.craftfx.Trigger;
 import org.bukkit.Location;
@@ -18,7 +18,7 @@ public class Explosion extends Effect {
 	boolean breakBlocks = false;
 	
 	public Explosion(Trigger trigger, ItemStack item, ConfigurationSection config) {
-		super(EffectType.EXPLOSION, trigger, item);
+		super(trigger, item);
 		
 		if (config.contains("power"))
 			power = (float) config.getDouble("power");

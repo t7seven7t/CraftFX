@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2013 t7seven7t
  */
-package net.t7seven7t.craftfx.effects;
+package net.t7seven7t.craftfx.effect;
 
 import com.google.common.collect.Maps;
 import net.t7seven7t.craftfx.CraftFX;
@@ -25,8 +25,8 @@ public abstract class Effect {
 	
 	protected final EffectType effectType;
 	
-	public Effect(final EffectType effectType, Trigger trigger, ItemStack item) {
-		this.effectType = effectType;
+	public Effect(Trigger trigger, ItemStack item) {
+		this.effectType = EffectType.get(getClass().getSimpleName());
 		this.trigger = trigger;
 		this.item = item;
 	}

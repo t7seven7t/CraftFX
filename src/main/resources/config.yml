@@ -7,89 +7,121 @@ enchants-ignore-level-restriction: true
 
 # All custom items belong below here
 items:
-  §cMagic Staff:
-    id: stick
-    lore: §bFancy and stuff|§4Make your enemies fly!
-    enchants:
-      - silk touch:1
-      - knockback:7
-    recipe:
-      amount: 4
-      type: shaped
-      shape:
-        - " a"
-        - "ab"
-        - " a"
-      ingredients:
-        - STICK,a
-        - 266,b
-  §5Purple thingy:
-    id: 298
-    lore: §5Feels all tingly inside
-    enchants:
-      - silk touch:1
-    color: 240,10,240
-    recipe:
-      type: shapeless
-      ingredients:
-        - 50,3
-        - stone hoe
-  §6Jungle Juice:
-    id: potion
-    lore: Don't drink this
-    potion-effects:
-      - confusion,1200,3
-      - invisibility,100,2
-    recipe:
-      type: furnace
-      ingredients:
-        - grass
-  §4Notch Head:
-    name: "§4Notch's Head"
-    id: skull item
-    lore: The holy grail
-    owner: Notch
-    potion-effects:
-      - jump,1200,5
-    potion-effects-triggers:
-      - right click air,right click block
-    recipe:
-      type: shapeless
-      ingredients:
-        - grass
-        - sand
-  Random Musings:
-    id: written book
-    lore: Random musings from|that weird|t7seven7t guy
-    author: §at7seven7t
-    title: §0Random Musings V1
-    pages:
-      - §4Once upon a §6starry §4night
-      - A mad man set sail
-      - for a kingdom oh so bright
-      - he could not help but wail
-    recipe:
-      type: shapeless
-      ingredients:
-        - coal
-        - sand
-  §4Explodey Stick:
-    id: stick
-    lore: Stuff go boom!
-    recipe:
-      type: shaped
-      shape: [a, b, b]
-      ingredients:
-        - tnt:a
-        - stick:b
-  Unbreaker:
-    id: wood sword
-    lore: Never breaks
-    recipe:
-      type: shapeless
-      ingredients:
-        - wood sword
-        - diamond
-    effect:
-      type: unbreaking
-      triggers: hit entity
+    §5Purple thingy:
+        id: 298
+        lore: §5@_@
+        enchants:
+            - silk touch:1
+        color: 240,10,240
+        recipe:
+            type: shapeless
+            ingredients:
+                - 50,3
+                - "Notch's Head,2"
+    §6Jungle Juice:
+        id: potion
+        lore: Don't drink this
+        potion-effects:
+            - confusion,60,3
+            - invisibility,5,2
+        recipe:
+            type: furnace
+            ingredients:
+                - grass
+    §4Notch Head:
+        name: "§4Notch's Head"
+        id: skull item
+        lore: The holy grail
+        owner: Notch
+        potion-effects:
+            - jump,60,5
+        potion-effects-triggers:
+            - right click air,right click block
+        recipe:
+            type: shapeless
+            ingredients:
+                - grass
+                - sand
+    Random Musings:
+        id: written book
+        lore: Random musings from|that weird|t7seven7t guy
+        author: §at7seven7t
+        title: §0Random Musings V1
+        pages:
+            - §4Once upon a §6starry §4night
+            - A mad man set sail
+            - for a kingdom oh so bright
+            - he could not help but wail
+        recipe:
+            type: shapeless
+            ingredients:
+                - coal
+                - sand
+    §5The Unbreaker:
+        id: wood sword
+        lore: Never breaks
+        recipe:
+            type: shapeless
+            ingredients:
+                - wood sword
+                - diamond
+        effect:
+            type: unbreaking
+            triggers: hit entity
+    Boots of flying:
+        id: gold boots
+        lore: As light as a feather
+        recipe:
+            type: shaped
+            ingredients: ["gold boots,a", "Purple thingy,b"]
+            shape: [" a", "b "]
+        effect:
+            type: fly
+            triggers: equipped
+    §4Explodey Stick:
+        id: stick
+        lore: Stuff go boom!
+        recipe:
+            type: shaped
+            shape: [a, b, b]
+            ingredients:
+                - tnt,a
+                - stick,b
+        cooldown: 0.4
+    §cMagic Staff:
+        id: stick
+        lore: §bFancy and stuff|§4Make your enemies fly!
+        cooldown: 1.25
+        enchants:
+            - silk touch:1
+            - knockback:7
+        recipe:
+            amount: 4
+            type: shaped
+            shape:
+                - " a"
+                - "ab"
+                - " a"
+            ingredients:
+                - STICK,a
+                - 266,b
+        effects:
+            1:
+                type: explosion
+                power: 4
+                set-fire: true
+                break-blocks: false
+                triggers: left click air
+            2:
+                type: potion
+                potion-effects: ["slow,5,3"]
+                triggers: left click air
+    Fly stick:
+        id: stick
+        recipe:
+            type: shapeless
+            ingredients: [stick, feather]
+        effect:
+            type: fly
+            fly-speed: 0.5
+            triggers: item held

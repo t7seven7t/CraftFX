@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2013 t7seven7t
  */
-package net.t7seven7t.craftfx;
+package net.t7seven7t.craftfx.recipe;
 
 import com.google.common.collect.Maps;
 
@@ -15,7 +15,7 @@ public enum RecipeType {
 	
 	private final static Map<String, RecipeType> BY_NAME = Maps.newHashMap();
 	
-	static RecipeType matches(String recipeType) {			
+	public static RecipeType matches(String recipeType) {			
 		return BY_NAME.get(recipeType.toUpperCase());
 	}
 	

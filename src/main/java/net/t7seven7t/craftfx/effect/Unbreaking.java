@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2013 t7seven7t
  */
-package net.t7seven7t.craftfx.effects;
+package net.t7seven7t.craftfx.effect;
 
 import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.Trigger;
@@ -19,7 +19,7 @@ import java.util.Map.Entry;
 public class Unbreaking extends Effect {
 
 	public Unbreaking(Trigger trigger, ItemStack item, ConfigurationSection config) {
-		super(EffectType.UNBREAKING, trigger, item);
+		super(trigger, item);
 		
 		this.affectsDamager = true;
 	}

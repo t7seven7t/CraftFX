@@ -1,13 +1,20 @@
 /**
  * Copyright (C) 2013 t7seven7t
  */
-package net.t7seven7t.craftfx;
+package net.t7seven7t.craftfx.item;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import net.t7seven7t.craftfx.effects.Effect;
-import net.t7seven7t.craftfx.effects.EffectType;
-import net.t7seven7t.craftfx.effects.Potion;
+
+import net.t7seven7t.craftfx.CraftFX;
+import net.t7seven7t.craftfx.Trigger;
+import net.t7seven7t.craftfx.effect.Effect;
+import net.t7seven7t.craftfx.effect.EffectType;
+import net.t7seven7t.craftfx.effect.Potion;
+import net.t7seven7t.craftfx.recipe.FXFurnaceRecipe;
+import net.t7seven7t.craftfx.recipe.FXShapedRecipe;
+import net.t7seven7t.craftfx.recipe.FXShapelessRecipe;
+import net.t7seven7t.craftfx.recipe.RecipeType;
 import net.t7seven7t.util.FormatUtil;
 
 import org.bukkit.ChatColor;
@@ -36,12 +43,10 @@ import java.util.logging.Level;
 public class ItemLoader {
 	
 	private CraftFX plugin;
-	private List<ItemStack> customItems;
 	
 	public ItemLoader(CraftFX plugin) {
 		
 		this.plugin = plugin;
-		this.customItems = Lists.newArrayList();
 		
 	}
 	
@@ -222,10 +227,7 @@ public class ItemLoader {
 				
 				// Update item meta data
 				item.setItemMeta(meta);			
-				
-				
-				customItems.add(item);
-									
+													
 				/**
 				 * 
 				 * BEGIN Effect Registrations
@@ -292,7 +294,7 @@ public class ItemLoader {
 			
 		}
 		
-		plugin.getLogHandler().log("{0} recipes loaded. {1} triggers loaded with {2} effects.", recipeCount, triggerCount, effectCount);
+		plugin.getLogHandler().log("{0} items loaded with {1} recipes, {2} triggers and {3} effects.", plugin.getItemDataList().size(), recipeCount, triggerCount, effectCount);
 				
 	}
 		
@@ -422,7 +424,7 @@ public class ItemLoader {
 		
 		List<Trigger> triggers = getTriggers(section.getString("triggers"), false);
 		
-		EffectType type = EffectType.matches(section.getString("type"));
+		EffectType type = EffectType.get(section.getString("type"));
 		
 		if (type == null)
 			exception("{0} is an invalid effect type.", section.getString("type"));
@@ -568,7 +570,9 @@ public class ItemLoader {
 	
 	public ItemStack getCustomItem(String displayName) {
 		
-		for (ItemStack item : customItems) {
+		for (ItemData data : plugin.getItemDataList()) {
+			
+			ItemStack item = data.getItem();
 			
 			if (ChatColor.stripColor(item.getItemMeta().getDisplayName()).equals(ChatColor.stripColor(displayName)))
 				return item;

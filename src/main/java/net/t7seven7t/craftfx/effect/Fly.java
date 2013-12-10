@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2013 t7seven7t
  */
-package net.t7seven7t.craftfx.effects;
+package net.t7seven7t.craftfx.effect;
 
 import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.Trigger;
@@ -18,7 +18,7 @@ public class Fly extends Effect {
 	float flySpeed = 1.0f;
 	
 	public Fly(Trigger trigger, ItemStack item, ConfigurationSection config) {
-		super(EffectType.FLY, trigger, item);
+		super(trigger, item);
 		
 		if (config.contains("fly-speed"))
 			flySpeed = (float) config.getDouble("fly-speed");

@@ -1,17 +1,17 @@
 /**
  * Copyright (C) 2013 t7seven7t
  */
-package net.t7seven7t.craftfx.listeners;
+package net.t7seven7t.craftfx.listener;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import net.t7seven7t.craftfx.CraftFX;
-import net.t7seven7t.craftfx.FXFurnaceRecipe;
-import net.t7seven7t.craftfx.FXShapedRecipe;
-import net.t7seven7t.craftfx.FXShapelessRecipe;
-import net.t7seven7t.craftfx.ItemData;
 import net.t7seven7t.craftfx.Trigger;
-import net.t7seven7t.craftfx.effects.Effect;
+import net.t7seven7t.craftfx.effect.Effect;
+import net.t7seven7t.craftfx.item.ItemData;
+import net.t7seven7t.craftfx.recipe.FXFurnaceRecipe;
+import net.t7seven7t.craftfx.recipe.FXShapedRecipe;
+import net.t7seven7t.craftfx.recipe.FXShapelessRecipe;
 import net.t7seven7t.util.FormatUtil;
 
 import org.bukkit.ChatColor;

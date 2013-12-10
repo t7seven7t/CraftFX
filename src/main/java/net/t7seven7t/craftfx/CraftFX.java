@@ -4,8 +4,12 @@
 package net.t7seven7t.craftfx;
 
 import com.google.common.collect.Lists;
-import net.t7seven7t.craftfx.effects.Effect;
-import net.t7seven7t.craftfx.listeners.CraftFXListener;
+
+import net.t7seven7t.craftfx.effect.Effect;
+import net.t7seven7t.craftfx.effect.EffectType;
+import net.t7seven7t.craftfx.item.ItemData;
+import net.t7seven7t.craftfx.item.ItemLoader;
+import net.t7seven7t.craftfx.listener.CraftFXListener;
 import net.t7seven7t.util.LogHandler;
 
 import org.bukkit.Bukkit;
@@ -15,6 +19,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -41,7 +47,16 @@ public class CraftFX extends JavaPlugin {
 		
 		saveDefaultConfig();
 		reloadConfig();
-				
+		
+		/**
+		 * Load custom written effects
+		 */
+		File effectsDirectory = new File(getDataFolder(), "effects");
+		if (!effectsDirectory.exists())
+			effectsDirectory.mkdir();
+		
+		EffectType.loadEffectTypes(effectsDirectory);
+		
 		/**
 		 * ItemLoader loads all custom items and their effects in the config
 		 */
@@ -67,6 +82,12 @@ public class CraftFX extends JavaPlugin {
 		this.itemData.add(data);
 		
 		return data;
+		
+	}
+	
+	public List<ItemData> getItemDataList() {
+		
+		return Collections.unmodifiableList(itemData);
 		
 	}
 	

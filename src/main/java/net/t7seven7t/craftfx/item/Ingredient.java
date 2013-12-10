@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2013 t7seven7t
  */
-package net.t7seven7t.craftfx;
+package net.t7seven7t.craftfx.item;
 
 import org.bukkit.inventory.ItemStack;
 
