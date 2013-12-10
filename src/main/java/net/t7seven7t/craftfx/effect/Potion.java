@@ -3,12 +3,9 @@
  */
 package net.t7seven7t.craftfx.effect;
 
-import net.t7seven7t.craftfx.Trigger;
 import net.t7seven7t.craftfx.item.ItemLoader;
 
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 
 import java.util.List;
@@ -18,19 +15,15 @@ import java.util.List;
  */
 public class Potion extends Effect {
 
+	public static final String POTION_EFFECTS_PATH = "potion-effects";
+	
 	List<PotionEffect> potionEffects;
 	
-	public Potion(Trigger trigger, ItemStack item, ConfigurationSection config) throws Exception {
-		super(trigger, item);
+	@Override
+	public void initialize() throws Exception {
 		
-		this.potionEffects = ItemLoader.getPotionEffects(config.getStringList("potion-effects"));
-	}
-	
-	public Potion(Trigger trigger, ItemStack item, List<PotionEffect> potionEffects) {
-		super(trigger, item);
+		this.potionEffects = ItemLoader.getPotionEffects(getConfig().getStringList(POTION_EFFECTS_PATH));
 		
-		this.cancelsAction = true;
-		this.potionEffects = potionEffects;
 	}
 	
 	@Override

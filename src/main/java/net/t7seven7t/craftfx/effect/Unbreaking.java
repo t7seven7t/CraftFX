@@ -4,8 +4,6 @@
 package net.t7seven7t.craftfx.effect;
 
 import net.t7seven7t.craftfx.CraftFX;
-import net.t7seven7t.craftfx.Trigger;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -17,11 +15,12 @@ import java.util.Map.Entry;
  * @author t7seven7t
  */
 public class Unbreaking extends Effect {
-
-	public Unbreaking(Trigger trigger, ItemStack item, ConfigurationSection config) {
-		super(trigger, item);
+	
+	@Override
+	public void initialize() {
 		
 		this.affectsDamager = true;
+		
 	}
 	
 	@Override

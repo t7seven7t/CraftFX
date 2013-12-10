@@ -9,6 +9,7 @@ import com.google.common.collect.Maps;
 import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.Trigger;
 import net.t7seven7t.craftfx.effect.Effect;
+import net.t7seven7t.craftfx.effect.EffectFactory;
 import net.t7seven7t.craftfx.effect.EffectType;
 import net.t7seven7t.craftfx.effect.Potion;
 import net.t7seven7t.craftfx.recipe.FXFurnaceRecipe;
@@ -52,8 +53,8 @@ public class ItemLoader {
 	
 	public void loadItems() {
 		
-		// Store config value for whether enchantments higher than max level should be allowed
-		boolean ignoreLevelRestriction = plugin.getConfig().getBoolean("enchants-ignore-level-restriction", false);
+		// Get config value for whether enchantments higher than max level should be allowed
+		boolean ignoreLevelRestriction = plugin.getConfig().getBoolean("enchants-ignore-level-restriction");
 		
 		// Statistics
 		int recipeCount = 0;
@@ -201,7 +202,7 @@ public class ItemLoader {
 				// PotionMeta
 				if (section.contains("potion-effects")) {
 					
-					List<PotionEffect> potionEffectsList = getPotionEffects(section.getStringList("potion-effects"));
+					List<PotionEffect> potionEffectsList = getPotionEffects(section.getStringList(Potion.POTION_EFFECTS_PATH));
 					
 					// Item is a potion
 					if (meta instanceof PotionMeta) {
@@ -219,7 +220,7 @@ public class ItemLoader {
 						effectCount++;
 						
 						for (Trigger trigger : triggers)
-							data.addTriggerEffect(trigger, new Potion(trigger, item, potionEffectsList));
+							data.addTriggerEffect(trigger, EffectFactory.newEffect(EffectType.get("POTION"), trigger, item, section));
 						
 					}
 					
@@ -437,9 +438,7 @@ public class ItemLoader {
 			 */	
 			try {
 				
-				Effect effect = type.getEffectClass().getConstructor(Trigger.class, ItemStack.class, ConfigurationSection.class).newInstance(trigger, item, section);
-
-				triggerMap.put(trigger, Lists.newArrayList(effect));
+				triggerMap.put(trigger, Lists.newArrayList(EffectFactory.newEffect(type, trigger, item, section)));
 				
 			} catch (InvocationTargetException e) {
 				

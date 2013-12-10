@@ -8,6 +8,7 @@ import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.Trigger;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -23,37 +24,62 @@ import java.util.Map.Entry;
  */
 public abstract class Effect {
 	
-	protected final EffectType effectType;
+	private static final String CANCEL_EVENT_PATH = "cancel-event";
+	private static final String AFFECTS_DAMAGER_PATH = "affects-damager";
+	private static final String AREA_EFFECT_PATH = "area-effect";
+	private static final String AREA_EFFECT_RADIUS_PATH = "area-effect-radius";
+	private static final String DELAY_PATH = "delay";
 	
-	public Effect(Trigger trigger, ItemStack item) {
-		this.effectType = EffectType.get(getClass().getSimpleName());
+	private EffectType effectType;
+	private ConfigurationSection config;
+	private ItemStack item;
+	private Trigger trigger;
+	
+	Effect() { }
+	
+	final void initialize(EffectType effectType, Trigger trigger, ItemStack item, ConfigurationSection config) throws Exception {
+		this.effectType = effectType;
 		this.trigger = trigger;
 		this.item = item;
-	}
+		this.config = config;
 		
-	public final EffectType getEffectType() {
-		return effectType;
+		if (config.contains(CANCEL_EVENT_PATH))
+			cancelsAction = config.getBoolean(CANCEL_EVENT_PATH);
+		
+		if (config.contains(AFFECTS_DAMAGER_PATH))
+			affectsDamager = config.getBoolean(AFFECTS_DAMAGER_PATH);
+		
+		if (config.contains(AREA_EFFECT_PATH))
+			areaEffect = config.getBoolean(AREA_EFFECT_PATH);
+		
+		if (config.contains(AREA_EFFECT_RADIUS_PATH))
+			areaEffectDistanceSquared = Math.pow(config.getDouble(AREA_EFFECT_RADIUS_PATH), 2);
+		
+		if (config.contains(DELAY_PATH))
+			delay = config.getLong(DELAY_PATH);
+		
+		initialize();
+		
 	}
+	
+	public final EffectType getEffectType() { return effectType; }
+	public final ItemStack getItem() { return item; }
+	public final Trigger getTrigger() { return trigger; }
+	public final ConfigurationSection getConfig() { return config; }
 	
 	protected boolean cancelsAction = false;
 	protected boolean affectsDamager = false;
-	
+	protected boolean areaEffect = false;
+	protected double areaEffectDistanceSquared = 4.0;
 	protected long delay = 10L;
 	
-	protected ItemStack item;
-	protected Trigger trigger;
+	public boolean cancelsAction() { return cancelsAction; }
+	public boolean isDamagerAffected() { return affectsDamager; }
+	public boolean isAreaEffect() { return areaEffect; }
+	public double getAreaEffectDistanceSquared() { return areaEffectDistanceSquared; }
+	public long getDelay() { return delay; }
 	
-	public boolean cancelsAction() {
-		return cancelsAction;
-	}
-	
-	public boolean isDamagerAffected() {
-		return affectsDamager;
-	}
-	
-	public long getDelay() {
-		return delay;
-	}
+	public void initialize() throws Exception { }
 		
 	public void begin(Player player) { }
 	
@@ -84,6 +110,21 @@ public abstract class Effect {
 	
 	public final void runAll(Object... objects) {
 		
+		for (Object object : objects) {
+			if (areaEffect && Location.class.isInstance(object)) {
+				
+				Location loc = (Location) object;
+				
+				for (LivingEntity e : loc.getWorld().getLivingEntities()) {
+					
+					if (e.getLocation().distanceSquared(loc) <= areaEffectDistanceSquared)
+						all(runMethods, e);						
+					
+				}
+				
+			}
+		}
+		
 		all(runMethods, objects);
 		
 	}
@@ -96,16 +137,16 @@ public abstract class Effect {
 	
 	private final void all(Map<Class<?>, Method> methods, Object... objects) {
 		
-		for (Entry<Class<?>, Method> entry : methods.entrySet()) {
+		for (Object object : objects) {
 			
-			for (Object object : objects) {
-								
+			for (Entry<Class<?>, Method> entry : methods.entrySet()) {
+				
 				if (entry.getKey().isInstance(object))
-					try {
+					try {						
 						entry.getValue().invoke(this, object);
 					} catch (InvocationTargetException e) { e.getTargetException().printStackTrace(); 
 					} catch (Exception e) { e.printStackTrace();	}
-
+				
 			}
 			
 		}

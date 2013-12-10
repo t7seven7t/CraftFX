@@ -4,10 +4,7 @@
 package net.t7seven7t.craftfx.effect;
 
 import net.t7seven7t.craftfx.CraftFX;
-import net.t7seven7t.craftfx.Trigger;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
 /**
@@ -15,21 +12,23 @@ import org.bukkit.scheduler.BukkitRunnable;
  */
 public class Fly extends Effect {
 
-	float flySpeed = 1.0f;
+	private static final String FLY_SPEED_PATH = "fly-speed";
 	
-	public Fly(Trigger trigger, ItemStack item, ConfigurationSection config) {
-		super(trigger, item);
+	float flySpeed = 0.2f;
+	
+	@Override
+	public void initialize() {
 		
-		if (config.contains("fly-speed"))
-			flySpeed = (float) config.getDouble("fly-speed");
+		if (getConfig().isDouble(FLY_SPEED_PATH))
+			flySpeed = (float) getConfig().getDouble(FLY_SPEED_PATH);
 		
-		if (flySpeed > 1)
-			flySpeed = 1;
+		if (Math.abs(flySpeed) > 1)
+			flySpeed = 1 * Math.signum(flySpeed);
+
 		
-		if (flySpeed < -1)
-			flySpeed = -1;
 	}
 	
+	@Override
 	public void begin(final Player player) {
 		
 		player.setAllowFlight(true);

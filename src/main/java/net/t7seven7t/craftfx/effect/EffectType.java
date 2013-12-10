@@ -28,7 +28,15 @@ public class EffectType {
 		newEffectType(Fly.class);
 		newEffectType(Potion.class);
 		newEffectType(Unbreaking.class);
-
+		newEffectType(Message.class);
+		newEffectType(Burn.class);
+		newEffectType(Lightning.class);
+		newEffectType(Sound.class);
+		newEffectType(Disarm.class);
+		newEffectType("modify health", ModifyHealth.class);
+		newEffectType("modify walk speed", ModifyWalkSpeed.class);
+		newEffectType("bukkit effect", BukkitEffect.class);
+		
 		Validate.notNull(directory, "Directory cannot be null");
 		Validate.isTrue(directory.isDirectory(), "Directory must be a directory");
 		
@@ -73,7 +81,7 @@ public class EffectType {
 	}
 	
 	public static void newEffectType(String name, Class<? extends Effect> clazz) {
-				
+		
 		effectTypes.put(name.toUpperCase().replaceAll("\\s+", "_").replaceAll("\\W", ""), new EffectType(clazz));
 		
 	}
