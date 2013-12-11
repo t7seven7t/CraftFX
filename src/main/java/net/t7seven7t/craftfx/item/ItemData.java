@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 
@@ -21,22 +22,35 @@ import net.t7seven7t.craftfx.effect.Effect;
  */
 public class ItemData {
 
+	final String name;
 	final ItemStack item;
+	final ConfigurationSection config;	
 	
 	Map<Trigger, List<Effect>> effectMap;
-	long cooldown;
+	long cooldownLower;
+	long cooldownUpper;
 	boolean cooldownMessage;
 	List<Recipe> recipes;
 	
-	public ItemData(final ItemStack item) {
+	public ItemData(final String name, final ItemStack item, final ConfigurationSection config) {
+		this.name = name;
 		this.item = item;
+		this.config = config;
 		
 		this.effectMap = Maps.newHashMap();
 		this.recipes = Lists.newArrayList();
 	}
 	
+	public String getName() {
+		return name;
+	}
+	
 	public ItemStack getItem() {
 		return this.item.clone();
+	}
+	
+	public ConfigurationSection getConfig() {
+		return config;
 	}
 	
 	public void addRecipe(Recipe recipe) {
@@ -47,12 +61,30 @@ public class ItemData {
 		return Collections.unmodifiableList(this.recipes);
 	}
 	
+	public int getTriggerCount() {
+		return effectMap.size();
+	}
+	
+	public int getEffectCount() {
+		int effectCount = 0;
+		for (List<Effect> l : effectMap.values())
+			effectCount += l.size();
+		return effectCount;
+	}
+	
+	public void setCooldown(long cooldownLower, long cooldownUpper) {
+		this.cooldownLower = cooldownLower;
+		this.cooldownUpper = cooldownUpper;
+	}
+	
 	public void setCooldown(long cooldown) {
-		this.cooldown = cooldown;
+		setCooldown(cooldown, cooldown);
 	}
 	
 	public long getCooldown() {
-		return this.cooldown;
+
+		return (long) (Math.random() * (cooldownUpper - cooldownLower) + cooldownLower);
+		
 	}
 	
 	public void displayCooldownMessage() {

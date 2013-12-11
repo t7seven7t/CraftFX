@@ -18,7 +18,6 @@ import net.t7seven7t.craftfx.recipe.FXShapelessRecipe;
 import net.t7seven7t.craftfx.recipe.RecipeType;
 import net.t7seven7t.util.FormatUtil;
 
-import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
@@ -55,248 +54,209 @@ public class ItemLoader {
 		
 		// Get config value for whether enchantments higher than max level should be allowed
 		boolean ignoreLevelRestriction = plugin.getConfig().getBoolean("enchants-ignore-level-restriction");
-		
-		// Statistics
-		int recipeCount = 0;
-		int effectCount = 0;
-		int triggerCount = 0;
-		
+
 		List<ConfigurationSection> parents = getParentConfigurationSections();
 		parents.add(plugin.getConfig().getConfigurationSection("items"));
 		
-		Map<String, ConfigurationSection> keys = Maps.newHashMap();
-		Map<String, ConfigurationSection> orderedKeys = Maps.newLinkedHashMap();
+		ConfigurationSection section;	
 		
 		for (ConfigurationSection parent : parents) {
-			for (String key : parent.getKeys(false)) {
-				keys.put(key, parent.getConfigurationSection(key));
-			}
-		}
-		
-		while (keys.size() != orderedKeys.size()) {
 			
-			for (Entry<String, ConfigurationSection> entry : keys.entrySet()) {
+			for (String name : parent.getKeys(false)) {
 				
-				if (orderedKeys.containsKey(entry.getKey()))
-					continue;
+				section = parent.getConfigurationSection(name);
 				
-				boolean containsCustomIngredient = false;
-				
-				ConfigurationSection section = null;
-				
-				if (entry.getValue().contains("recipe"))
-					section = entry.getValue().getConfigurationSection("recipe");
-				else if (entry.getValue().contains("recipes"))
-					section = entry.getValue().getConfigurationSection("recipes");
-				
-				// Has no ingredients
-				if (section == null) {
-					containsCustomIngredient = true;
-				} else {
-					for (String ingredient : section.getStringList("ingredients")) {
-						
-						String[] results = ingredient.split(",");
-						
-						for (Entry<String, ConfigurationSection> entry1 : keys.entrySet()) {
-							if (((entry1.getValue().contains("name") 
-									&& ChatColor.stripColor(entry1.getValue().getString("name")).equals(ChatColor.stripColor(results[0])))
-									|| ChatColor.stripColor(entry1.getKey()).equals(ChatColor.stripColor(results[0])))
-									&& !orderedKeys.containsKey(entry1.getKey())) {								
+				try {
+					
+					String[] materialResults = section.getString("id").split(":");
+					
+					Material material = Material.matchMaterial(materialResults[0]);				
+					
+					if (material == null)
+						exception("No material specified or material name did not match.");
+					
+					ItemStack item = new ItemStack(material);
+					
+					if (materialResults.length > 1)
+						item.setDurability(Short.valueOf(materialResults[1]));
+					
+					/**
+					 * 
+					 * BEGIN ItemMeta changes
+					 * 
+					 */
+					
+					plugin.addItem(new ItemData(name, item, section));
+					
+					ItemMeta meta = item.getItemMeta();
 								
-								containsCustomIngredient = true;
-								break;
-							}
-						}
+					// Set the custom name of the item
+					meta.setDisplayName(name);
+					
+					// Set alternate display name if used, to allow special characters that cannot be in YAML keys
+					if (section.contains("name")) {
 						
-						if (containsCustomIngredient)
-							break;
-								
+						meta.setDisplayName(section.getString("name"));
+						
 					}
-				}
-				
-				if (!containsCustomIngredient)
-					orderedKeys.put(entry.getKey(), entry.getValue());
-			
-			}
-			
-		}
-		
-		ConfigurationSection section;	
-		String name;
-		
-		for (Entry<String, ConfigurationSection> entry : orderedKeys.entrySet()) {
-			section = entry.getValue();
-			name = entry.getKey();
-
-			try {
-								
-				String[] materialResults = section.getString("id").split(":");
-				
-				Material material = Material.matchMaterial(materialResults[0]);				
-				
-				if (material == null)
-					exception("No material specified or material name did not match.");
-				
-				ItemStack item = new ItemStack(material);
-				
-				if (materialResults.length > 1)
-					item.setDurability(Short.valueOf(materialResults[1]));
-				
-				/**
-				 * 
-				 * BEGIN ItemMeta changes
-				 * 
-				 */
-				
-				ItemData data = plugin.newItem(item);
-				ItemMeta meta = item.getItemMeta();
-							
-				// Set the custom name of the item
-				meta.setDisplayName(name);
-				
-				// Set alternate display name if used, to allow special characters that cannot be in YAML keys
-				if (section.contains("name")) {
 					
-					meta.setDisplayName(section.getString("name"));
+					// Set lore if specified
+					if (section.contains("lore")) {
+						
+						meta.setLore(Arrays.asList(section.getString("lore").split("\\|")));
+						
+					}
 					
-				}
-				
-				// Set lore if specified
-				if (section.contains("lore")) {
+					// Set enchantments if specified
+					if (section.contains("enchants")) {
+						
+						setMetaEnchantments(meta, section.getStringList("enchants"), ignoreLevelRestriction);
+						
+					}
 					
-					meta.setLore(Arrays.asList(section.getString("lore").split("\\|")));
-					
-				}
-				
-				// Set enchantments if specified
-				if (section.contains("enchants")) {
-					
-					setMetaEnchantments(meta, section.getStringList("enchants"), ignoreLevelRestriction);
-					
-				}
-				
-				// Set other meta types if they exist
-				// LeatherArmorMeta
-				if (section.contains("color") && meta instanceof LeatherArmorMeta) {
-					
-					setLeatherArmorMeta(meta, section.getString("color"));		
-					
-				} 
-				// BookMeta
-				else if (meta instanceof BookMeta) {
-					
-					setBookMeta(meta, section);
-					
-				} 
-				// SkullMeta
-				else if (section.contains("owner") && meta instanceof SkullMeta) {
-					
-					// Sets skull type to player
-					item.setDurability((short) 3);
-					
-					((SkullMeta) meta).setOwner(section.getString("owner"));
-					
-				}
-				
-				
-				// PotionMeta
-				if (section.contains("potion-effects")) {
-					
-					List<PotionEffect> potionEffectsList = getPotionEffects(section.getStringList(Potion.POTION_EFFECTS_PATH));
-					
-					// Item is a potion
-					if (meta instanceof PotionMeta) {
+					// Set other meta types if they exist
+					// LeatherArmorMeta
+					if (section.contains("color") && meta instanceof LeatherArmorMeta) {
+						
+						setLeatherArmorMeta(meta, section.getString("color"));		
+						
+					} 
+					// BookMeta
+					else if (meta instanceof BookMeta) {
+						
+						setBookMeta(meta, section);
+						
+					} 
+					// SkullMeta
+					else if (section.contains("owner") && meta instanceof SkullMeta) {
+						
+						// Sets skull type to player
+						item.setDurability((short) 3);
+						
+						((SkullMeta) meta).setOwner(section.getString("owner"));
+						
+					}					
+					// PotionMeta
+					else if (section.contains("potion-effects") && meta instanceof PotionMeta) {
+						
+						List<PotionEffect> potionEffectsList = getPotionEffects(section.getStringList(Potion.POTION_EFFECTS_PATH));
 						
 						for (PotionEffect effect : potionEffectsList)
 							((PotionMeta) meta).addCustomEffect(effect, true);
 						
 					}
-					// Item is not a potion - register on-use listening
-					else if (section.contains("potion-effects-triggers")) {
+					
+					// Update item meta data
+					item.setItemMeta(meta);
+				} catch (Exception e) {
+					
+					plugin.getLogHandler().log(Level.SEVERE, "Item {0} encountered the problem: {1}", name, e.getMessage());
+					
+					if (plugin.getConfig().getBoolean("debug"))
+						e.printStackTrace();
+					
+				}
+			}
+		}		
+		
+		int recipeCount = 0;
+		int triggerCount = 0;
+		int effectCount = 0;
+		
+		for (ItemData data : plugin.getItemDataList()) {
+			
+			load(data);
+			
+			recipeCount += data.getRecipes().size();
+			triggerCount += data.getTriggerCount();
+			effectCount += data.getEffectCount();
+				
+		}
+		
+        plugin.getLogHandler().log("{0} items loaded with {1} recipes, {2} triggers and {3} effects.", plugin.getItemDataList().size(), recipeCount, triggerCount, effectCount);
+		
+	}
+	
+	private void load(ItemData data) {
 						
-						List<Trigger> triggers = getTriggers(section.getString("potion-effects-triggers"), true);
-						
-						triggerCount += triggers.size();
-						effectCount++;
-						
-						for (Trigger trigger : triggers)
-							data.addTriggerEffect(trigger, EffectFactory.newEffect(EffectType.get("POTION"), trigger, item, section));
-						
-					}
-					
-				}
+		ItemStack item = data.getItem();
 				
-				// Update item meta data
-				item.setItemMeta(meta);			
-													
-				/**
-				 * 
-				 * BEGIN Effect Registrations
-				 * 
-				 */
+		try {
+			
+			/**
+			 * 
+			 * BEGIN Effect Registrations
+			 * 
+			 */
+			
+			ConfigurationSection config = data.getConfig();
+			
+			Map<Trigger, List<Effect>> effectMap = null;
+			
+			if (config.contains("effect")) {
 				
-				Map<Trigger, List<Effect>> effectMap = null;
+				effectMap = getEffect(config.getConfigurationSection("effect"), item);
+										
+			} else if (config.contains("effects")) {
 				
-				if (section.contains("effect")) {
-					
-					effectMap = getEffect(section.getConfigurationSection("effect"), item);
-											
-				} else if (section.contains("effects")) {
-					
-					effectMap = getEffects(section.getConfigurationSection("effects"), item);
-					
-				}					
+				effectMap = getEffects(config.getConfigurationSection("effects"), item);
 				
-				if (effectMap != null) {
-					
-					triggerCount += effectMap.size();
-					effectCount += registerTriggerMap(effectMap, data);						
-					
-				}
+			}					
+			
+			if (effectMap != null) {
 				
-				if (section.contains("cooldown")) {
-					
-					data.setCooldown((long) (section.getDouble("cooldown") * 20L));
-					
-				}
-				
-				if (section.getBoolean("show-cooldown-message", true)) {
-					
-					data.displayCooldownMessage();
-					
-				}
-				
-				/**
-				 * 
-				 * BEGIN Recipe registrations
-				 * 
-				 */
-							
-				// Set recipe if specified
-				if (section.contains("recipe")) {
-					
-					registerRecipe(section.getConfigurationSection("recipe"), item, data);
-					recipeCount++;
-					
-				} else if (section.contains("recipes")) {
-					
-					recipeCount += registerRecipes(section.getConfigurationSection("recipes"), item, data);
-					
-				}
-				
-			} catch (Exception e) {
-				
-				plugin.getLogHandler().log(Level.SEVERE, "Item {0} encountered the problem: {1}", name, e.getMessage());
-				
-				if (plugin.getConfig().getBoolean("debug"))
-					e.printStackTrace();
+				registerTriggerMap(effectMap, data);						
 				
 			}
 			
-		}
-		
-		plugin.getLogHandler().log("{0} items loaded with {1} recipes, {2} triggers and {3} effects.", plugin.getItemDataList().size(), recipeCount, triggerCount, effectCount);
+			if (config.contains("cooldown")) {
 				
+				if (config.isList("cooldown") && config.getList("cooldown").size() >= 2) {
+					
+					List<Double> cooldownBounds = config.getDoubleList("cooldown");
+					
+					data.setCooldown((long) (cooldownBounds.get(0) * 20L), (long) (cooldownBounds.get(1) * 20L));
+					
+				} else {
+					
+					data.setCooldown((long) (config.getDouble("cooldown") * 20L));
+		
+				}
+				
+			}
+			
+			if (config.getBoolean("show-cooldown-message", true)) {
+				
+				data.displayCooldownMessage();
+				
+			}
+					
+			/**
+			 * 
+			 * BEGIN Recipe registrations
+			 * 
+			 */
+						
+			// Set recipe if specified
+			if (config.contains("recipe")) {
+				
+				registerRecipe(config.getConfigurationSection("recipe"), item, data);
+				
+			} else if (config.contains("recipes")) {
+				
+				 registerRecipes(config.getConfigurationSection("recipes"), item, data);
+				
+			}
+				
+		} catch (Exception e) {
+			
+			plugin.getLogHandler().log(Level.SEVERE, "Item {0} encountered the problem: {1}", data.getName(), e.getMessage());
+			
+			if (plugin.getConfig().getBoolean("debug"))
+				e.printStackTrace();
+			
+		}
+						
 	}
 		
 	private void setMetaEnchantments(ItemMeta meta, List<String> enchantmentsStringList, boolean ignoreLevelRestriction) throws Exception {
@@ -364,20 +324,14 @@ public class ItemLoader {
 	 * @param ItemStack that map effects are bound to
 	 * @return number of effects in map
 	 */
-	private int registerTriggerMap(Map<Trigger, List<Effect>> triggerMap, ItemData data) {
-		
-		int effectCount = 0;
+	private void registerTriggerMap(Map<Trigger, List<Effect>> triggerMap, ItemData data) {
 		
 		for (Entry<Trigger, List<Effect>> entry : triggerMap.entrySet()) {
-			
-			effectCount += entry.getValue().size();
-			
+						
 			data.addTriggerEffects(entry.getKey(), entry.getValue());
 			
 		}
-		
-		return effectCount;
-		
+				
 	}
 	
 	private Map<Trigger, List<Effect>> getEffects(ConfigurationSection section, ItemStack item) throws Exception {
@@ -423,7 +377,7 @@ public class ItemLoader {
 		
 		Map<Trigger, List<Effect>> triggerMap = Maps.newHashMap();
 		
-		List<Trigger> triggers = getTriggers(section.getString("triggers"), false);
+		List<Trigger> triggers = getTriggers(section.getStringList("triggers"), false);
 		
 		EffectType type = EffectType.get(section.getString("type"));
 		
@@ -452,14 +406,14 @@ public class ItemLoader {
 		
 	}
 	
-	private List<Trigger> getTriggers(String triggersString, boolean isPotion) throws Exception {
+	private List<Trigger> getTriggers(List<String> triggersStringList, boolean isPotion) throws Exception {
 		
-		if (triggersString == null)
+		if (triggersStringList == null)
 			exception("No triggers specified.");
 		
 		List<Trigger> triggers = Lists.newArrayList();
 		
-		for (String triggerString : triggersString.split(",")) {
+		for (String triggerString : triggersStringList) {
 										
 			Trigger trigger = Trigger.matches(triggerString);
 			
@@ -507,10 +461,8 @@ public class ItemLoader {
 		
 	}
 	
-	private int registerRecipes(ConfigurationSection section, ItemStack item, ItemData data) throws Exception {
-		
-		int recipeCount = 0;
-		
+	private void registerRecipes(ConfigurationSection section, ItemStack item, ItemData data) throws Exception {
+				
 		/**
 		 * Key names can be anything
 		 */
@@ -518,12 +470,9 @@ public class ItemLoader {
 		for (String key : section.getKeys(false)) {
 			
 			registerRecipe(section.getConfigurationSection(key), item, data); 
-			recipeCount++;
-
+			
 		}
-		
-		return recipeCount;
-		
+				
 	}
 	
 	private void registerRecipe(ConfigurationSection section, ItemStack item, ItemData data) throws Exception {
@@ -566,21 +515,6 @@ public class ItemLoader {
 		plugin.getServer().addRecipe(recipe);
 				
 	}
-	
-	public ItemStack getCustomItem(String displayName) {
-		
-		for (ItemData data : plugin.getItemDataList()) {
-			
-			ItemStack item = data.getItem();
-			
-			if (ChatColor.stripColor(item.getItemMeta().getDisplayName()).equals(ChatColor.stripColor(displayName)))
-				return item;
-			
-		}
-		
-		return null;
-		
-	}
 
 	private List<Ingredient> getIngredients(List<String> ingredientsStringList) throws Exception {
 		
@@ -597,7 +531,7 @@ public class ItemLoader {
 			
 			if (ingredientMaterial == null) {
 				
-				ingredient = getCustomItem(results[0]);
+				ingredient = CraftFX.getCustomItem(results[0]);
 				
 				if (ingredient == null)
 					exception("Material name \"{0}\" is invalid.", results[0]);

@@ -33,15 +33,19 @@ items:
         id: skull item
         lore: The holy grail
         owner: Notch
-        potion-effects:
-            - jump,60,5
-        potion-effects-triggers:
-            - right click air,right click block
         recipe:
             type: shapeless
             ingredients:
                 - grass
                 - sand
+        effect:
+            type: potion
+            potion-effects:
+                - jump,60,5
+            cancel-event: true
+            triggers: 
+                - right click air
+                - right click block
     Random Musings:
         id: written book
         lore: Random musings from|that weird|t7seven7t guy

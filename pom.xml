@@ -3,7 +3,7 @@
 
     <groupId>net.t7seven7t.craftfx</groupId>
     <artifactId>CraftFX</artifactId>
-    <version>0.0.3</version>
+    <version>0.9.0</version>
     <name>CraftFX</name>
     <url></url>
     <packaging>jar</packaging>

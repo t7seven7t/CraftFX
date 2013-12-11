@@ -60,8 +60,10 @@ public class CraftFXListener implements Listener {
 					
 					Entry<Player, Map<ItemStack, Long>> entry = it.next();
 					
-					if (entry.getValue() == null || entry.getValue().isEmpty())
+					if (entry.getValue() == null || entry.getValue().isEmpty()) {
 						it.remove();
+						continue;
+					}
 					
 					Iterator<Entry<ItemStack, Long>> it2 = entry.getValue().entrySet().iterator();
 					
@@ -102,6 +104,7 @@ public class CraftFXListener implements Listener {
 		
 		if (!event.hasItem())
 			return;
+		
 		Action eventAction = event.getAction();
 		
 		List<Effect> effects;
@@ -117,7 +120,7 @@ public class CraftFXListener implements Listener {
 					
 				if (isCoolingDown(event.getPlayer(), event.getItem()))
 					return;
-				
+
 				for (Effect effect : effects) {
 					effect.runAll(event.getPlayer());
 					
@@ -692,12 +695,12 @@ public class CraftFXListener implements Listener {
 	}
 	
 	private void startCooldown(Player player, ItemStack item) {
-		
+
 		long cooldown;
 		if ((cooldown = plugin.getItemData(item).getCooldown()) > 0L) {
 			
 			ItemStack itemNorm = new ItemStack(item);
-			
+
 			Map<ItemStack, Long> cooldowns = playerCooldowns.get(player);
 			
 			if (cooldowns == null)
@@ -713,7 +716,7 @@ public class CraftFXListener implements Listener {
 					break;
 				}
 			}
-			
+
 			if (!exists) {
 				cooldowns.put(itemNorm, cooldown);
 				playerCooldowns.put(player, cooldowns);

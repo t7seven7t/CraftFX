@@ -24,7 +24,7 @@ public class Sound extends Effect {
 	public void initialize() throws Exception {
 		
 		if (getConfig().isString(SOUND_PATH))
-			sound = org.bukkit.Sound.valueOf(getConfig().getString(SOUND_PATH).replaceAll("\\s+", "_").replaceAll("\\W", ""));
+			sound = org.bukkit.Sound.valueOf(getConfig().getString(SOUND_PATH).toUpperCase().replaceAll("\\s+", "_").replaceAll("\\W", ""));
 		else
 			throw new Exception("No sound type specified.");
 		

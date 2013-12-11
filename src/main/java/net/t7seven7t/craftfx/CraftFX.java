@@ -13,6 +13,7 @@ import net.t7seven7t.craftfx.listener.CraftFXListener;
 import net.t7seven7t.util.LogHandler;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
@@ -20,6 +21,7 @@ import org.bukkit.inventory.Recipe;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -36,9 +38,16 @@ public class CraftFX extends JavaPlugin {
 	
 	public void onEnable() {
 
+		long start = System.currentTimeMillis();
+		
 		CraftFX.plugin = this;
 		
 		logHandler = new LogHandler(this);
+		
+		try {
+			Metrics metrics = new Metrics(this);
+			metrics.start();
+		} catch (IOException e) { }
 		
 		itemData = Lists.newArrayList();
 				
@@ -65,6 +74,8 @@ public class CraftFX extends JavaPlugin {
 		
 		CraftFXListener listener = new CraftFXListener(this);
 		registerListener(listener);
+		
+		logHandler.log("Enabled! [{0}ms]", System.currentTimeMillis() - start);
 				
 	}
 
@@ -76,12 +87,9 @@ public class CraftFX extends JavaPlugin {
 		getServer().getPluginManager().registerEvents(listener, this);
 	}
 	
-	public ItemData newItem(ItemStack item) {
+	public void addItem(ItemData data) {
 		
-		ItemData data = new ItemData(item);
 		this.itemData.add(data);
-		
-		return data;
 		
 	}
 	
@@ -153,6 +161,21 @@ public class CraftFX extends JavaPlugin {
 				&& item1.hasItemMeta() == item2.hasItemMeta()
 				&& (item1.hasItemMeta() ? Bukkit.getItemFactory().equals(
 						item1.getItemMeta(), item2.getItemMeta()) : true);
+		
+	}
+	
+	public static ItemStack getCustomItem(String displayName) {
+		
+		for (ItemData data : plugin.getItemDataList()) {
+			
+			ItemStack item = data.getItem();
+			
+			if (ChatColor.stripColor(item.getItemMeta().getDisplayName()).equals(ChatColor.stripColor(displayName)))
+				return item;
+			
+		}
+		
+		return null;
 		
 	}
 

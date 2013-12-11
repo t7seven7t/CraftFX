@@ -3,9 +3,12 @@
  */
 package net.t7seven7t.craftfx.effect;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.Trigger;
+import net.t7seven7t.util.FormatUtil;
+
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
@@ -16,6 +19,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -29,14 +33,13 @@ public abstract class Effect {
 	private static final String AREA_EFFECT_PATH = "area-effect";
 	private static final String AREA_EFFECT_RADIUS_PATH = "area-effect-radius";
 	private static final String DELAY_PATH = "delay";
+	private static final String EFFECTS_PATH = "effects";
 	
 	private EffectType effectType;
 	private ConfigurationSection config;
 	private ItemStack item;
 	private Trigger trigger;
-	
-	Effect() { }
-	
+		
 	final void initialize(EffectType effectType, Trigger trigger, ItemStack item, ConfigurationSection config) throws Exception {
 		this.effectType = effectType;
 		this.trigger = trigger;
@@ -58,6 +61,25 @@ public abstract class Effect {
 		if (config.contains(DELAY_PATH))
 			delay = config.getLong(DELAY_PATH);
 		
+		if (config.contains(EFFECTS_PATH)) {
+			
+			subEffects = Lists.newArrayList();
+			
+			ConfigurationSection section = config.getConfigurationSection(EFFECTS_PATH);
+			
+			for (String key : section.getKeys(false)) {
+				
+				EffectType type = EffectType.get(section.getConfigurationSection(key).getString("type"));
+				
+				if (type == null)
+					throw new Exception(FormatUtil.format("{0} is an invalid effect type.", section.getConfigurationSection(key).getString("type")));
+				
+				subEffects.add(EffectFactory.newEffect(type, trigger, item, section.getConfigurationSection(key)));
+				
+			}
+			
+		}
+		
 		initialize();
 		
 	}
@@ -67,12 +89,15 @@ public abstract class Effect {
 	public final Trigger getTrigger() { return trigger; }
 	public final ConfigurationSection getConfig() { return config; }
 	
+	protected boolean cancelled = false;
 	protected boolean cancelsAction = false;
 	protected boolean affectsDamager = false;
 	protected boolean areaEffect = false;
 	protected double areaEffectDistanceSquared = 4.0;
 	protected long delay = 10L;
+	protected List<Effect> subEffects;
 	
+	public boolean isCancelled() { return cancelled; }
 	public boolean cancelsAction() { return cancelsAction; }
 	public boolean isDamagerAffected() { return affectsDamager; }
 	public boolean isAreaEffect() { return areaEffect; }
@@ -137,15 +162,24 @@ public abstract class Effect {
 	
 	private final void all(Map<Class<?>, Method> methods, Object... objects) {
 		
+		cancelled = false;
+		
 		for (Object object : objects) {
 			
 			for (Entry<Class<?>, Method> entry : methods.entrySet()) {
 				
-				if (entry.getKey().isInstance(object))
+				if (entry.getKey().isInstance(object)) {
 					try {						
 						entry.getValue().invoke(this, object);
+						
+						if (!this.isCancelled() && subEffects != null) {
+							for (Effect effect : subEffects) 
+								entry.getValue().invoke(effect, object);
+						}
+
 					} catch (InvocationTargetException e) { e.getTargetException().printStackTrace(); 
 					} catch (Exception e) { e.printStackTrace();	}
+				}
 				
 			}
 			

@@ -13,26 +13,31 @@ import org.bukkit.Location;
 public class BukkitEffect extends Effect {
 
 	private static final String NAME_PATH = "name";
+	private static final String DATA_PATH = "data";
 	
 	org.bukkit.Effect effect;
+	int data;
 	
 	@Override
 	public void initialize() throws Exception {
 		
 		if (getConfig().isString(NAME_PATH))
-			effect = org.bukkit.Effect.valueOf(getConfig().getString(NAME_PATH).replaceAll("\\s+", "_").replaceAll("\\W", ""));
+			effect = org.bukkit.Effect.valueOf(getConfig().getString(NAME_PATH).toUpperCase().replaceAll("\\s+", "_").replaceAll("\\W", ""));
 		else
 			throw new Exception("No bukkit effect type specified.");
 		
 		if (effect == null)
 			throw new Exception(FormatUtil.format("{0} is an invalid effect type.", getConfig().getString(NAME_PATH)));
 		
+		if (getConfig().isInt(DATA_PATH))
+			data = getConfig().getInt(DATA_PATH);
+		
 	}
 	
 	@Override
 	public void run(Location location) {
 		
-		location.getWorld().playEffect(location, effect, effect.getData());
+		location.getWorld().playEffect(location, effect, data);
 		
 	}
 	

@@ -1,6 +1,12 @@
 CHANGES
 =======
 
+Version 0.9.0
+-------------
+- Added plugin metrics
+- Change how items load to allow sub effects that are cancelled when the main effect is
+- Bug fixes with getting sounds and bukkit effects
+
 Version 0.0.3
 -------------
 - Changed some access modifiers
