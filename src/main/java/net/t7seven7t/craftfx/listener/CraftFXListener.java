@@ -32,6 +32,7 @@ import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
+import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Collection;
@@ -49,6 +50,7 @@ public class CraftFXListener implements Listener {
 	
 	public CraftFXListener(final CraftFX plugin) {
 		this.plugin = plugin;
+		this.playerCooldowns = CraftFX.newPlayerMap();
 		
 		new BukkitRunnable() {
 
@@ -91,7 +93,7 @@ public class CraftFXListener implements Listener {
 	
 	private Map<Integer, ItemStack> livingProjectiles = Maps.newHashMap();
 	private Map<Player, Map<ItemStack, Integer>> equippedPlayers = Maps.newHashMap();
-	private Map<Player, Map<ItemStack, Long>> playerCooldowns = Maps.newHashMap();
+	private Map<Player, Map<ItemStack, Long>> playerCooldowns;
 	private List<String> noCooldownPlayers = Lists.newArrayList();
 	private List<String> noCooldownMessagePlayers = Lists.newArrayList();
 	
@@ -221,7 +223,7 @@ public class CraftFXListener implements Listener {
 	public void onAsyncPlayerChatEvent(AsyncPlayerChatEvent event) {
 		
 		// TODO: Write proper chat hook for effects triggered
-		
+
 	}
 	
 	/**
@@ -242,9 +244,23 @@ public class CraftFXListener implements Listener {
 	 * @Cancellable
 	 */
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onPlayerDropItemEvent(PlayerDropItemEvent event) {
+	public void onPlayerDropItemEvent(final PlayerDropItemEvent event) {
 		
-		removeEquippedEffects(event.getPlayer(), event.getItemDrop().getItemStack());
+		final ItemStack item = event.getItemDrop().getItemStack();
+		
+		if (plugin.getEffects(item, Trigger.ITEM_HELD) == null)
+			return;
+		
+		new BukkitRunnable() {
+			
+			public void run() {
+				
+				if (!CraftFX.isSimilar(item, event.getPlayer().getItemInHand()))
+					removeEquippedEffects(event.getPlayer(), item);
+				
+			}
+			
+		}.runTask(plugin);
 		
 	}
 	
@@ -253,14 +269,28 @@ public class CraftFXListener implements Listener {
 	 * @Cancellable
 	 */
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onPlayerPickupItemEvent(PlayerPickupItemEvent event) {
+	public void onPlayerPickupItemEvent(final PlayerPickupItemEvent event) {
 		
-		if (CraftFX.isSimilar(event.getItem().getItemStack(), event.getPlayer().getItemInHand())) {
+		if (plugin.getEffects(event.getItem().getItemStack(), Trigger.ITEM_HELD) == null)
+			return;
+		
+		final ItemStack item1 = event.getPlayer().getItemInHand();
+		final ItemStack item2 = event.getItem().getItemStack();
+		final int slot = event.getPlayer().getInventory().getHeldItemSlot();
+		
+		new BukkitRunnable() {
 			
-			applyEquippedEffects(event.getPlayer(), event.getItem().getItemStack(), Trigger.ITEM_HELD);
+			public void run() {
+				
+				if (event.getPlayer().getInventory().getHeldItemSlot() == slot 
+						&& CraftFX.isSimilar(item2, event.getPlayer().getItemInHand())
+						&& !CraftFX.isSimilar(item1, event.getPlayer().getItemInHand()))
+					applyEquippedEffects(event.getPlayer(), item2, Trigger.ITEM_HELD);
+				
+			}
 			
-		}
-			
+		}.runTask(plugin);
+		
 	}
 	
 	/**
@@ -323,7 +353,7 @@ public class CraftFXListener implements Listener {
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onProjectileLaunchEvent(ProjectileLaunchEvent event) {
 				
-		LivingEntity shooter = event.getEntity().getShooter();
+		ProjectileSource shooter = event.getEntity().getShooter();
 		
 		if (shooter == null || !(shooter instanceof Player))
 			return;
@@ -336,7 +366,7 @@ public class CraftFXListener implements Listener {
 			
 			for (Effect effect : effects) {
 				
-				effect.runAll(shooter.getLocation(), shooter);
+				effect.runAll(((Player) shooter).getLocation(), shooter);
 				
 				if (!event.isCancelled())
 					cancelAction(effect, event);
@@ -525,6 +555,13 @@ public class CraftFXListener implements Listener {
 			removeEquippedEffects(player, item);
 			
 		}		
+		
+		for (Map<Player, ?> map : plugin.getPlayerMaps()) {
+			
+			if (map.keySet().contains(player))
+				map.remove(player);
+			
+		}
 		
 	}
 	

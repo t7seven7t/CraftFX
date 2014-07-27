@@ -12,7 +12,7 @@ public class ModifyHealth extends Effect {
 
 	private static final String AMOUNT_PATH = "amount";
 	
-	double amount = 1.0f;
+	double amount = -1.0f;
 	
 	@Override
 	public void initialize() {
@@ -25,7 +25,7 @@ public class ModifyHealth extends Effect {
 	@Override
 	public void run(LivingEntity entity) {
 		
-		entity.damage(-amount);
+		entity.damage(amount);
 		
 	}
 	

@@ -4,6 +4,7 @@
 package net.t7seven7t.craftfx;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import net.t7seven7t.craftfx.effect.Effect;
 import net.t7seven7t.craftfx.effect.EffectType;
@@ -15,6 +16,7 @@ import net.t7seven7t.util.LogHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
@@ -24,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author t7seven7t
@@ -35,6 +38,7 @@ public class CraftFX extends JavaPlugin {
 	private LogHandler logHandler;
 
 	private List<ItemData> itemData;
+	private static List<Map<Player, ?>> playerMaps; // Change to a map of players and list values instead - more efficient. Also describe this better, wtf does it do
 	
 	public void onEnable() {
 
@@ -50,6 +54,7 @@ public class CraftFX extends JavaPlugin {
 		} catch (IOException e) { }
 		
 		itemData = Lists.newArrayList();
+		playerMaps = Lists.newArrayList();
 				
 		if (!getDataFolder().exists())
 			getDataFolder().mkdir();
@@ -83,8 +88,8 @@ public class CraftFX extends JavaPlugin {
 		
 	}
 
-	public void registerListener(Listener listener) {
-		getServer().getPluginManager().registerEvents(listener, this);
+	public static void registerListener(Listener listener) {
+		plugin.getServer().getPluginManager().registerEvents(listener, plugin);
 	}
 	
 	public void addItem(ItemData data) {
@@ -140,6 +145,12 @@ public class CraftFX extends JavaPlugin {
 		
 	}
 	
+	public List<Map<Player, ?>> getPlayerMaps() {
+		
+		return Collections.unmodifiableList(playerMaps);
+		
+	}
+	
 	public static boolean isSimilar(ItemStack item1, ItemStack item2) {
 		
 		if (item1 != null && item1.getType() == Material.AIR)
@@ -176,6 +187,15 @@ public class CraftFX extends JavaPlugin {
 		}
 		
 		return null;
+		
+	}
+	
+	public static <T> Map<Player, T> newPlayerMap() {
+		
+		Map<Player, T> map = Maps.newHashMap();
+		
+		playerMaps.add(map);
+		return map;
 		
 	}
 

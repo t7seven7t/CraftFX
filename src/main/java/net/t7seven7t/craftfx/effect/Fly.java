@@ -25,7 +25,6 @@ public class Fly extends Effect {
 		if (Math.abs(flySpeed) > 1)
 			flySpeed = 1 * Math.signum(flySpeed);
 
-		
 	}
 	
 	@Override

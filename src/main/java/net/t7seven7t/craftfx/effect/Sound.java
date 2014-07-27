@@ -15,10 +15,12 @@ public class Sound extends Effect {
 	private static final String SOUND_PATH = "sound";
 	private static final String VOLUME_PATH = "volume";
 	private static final String PITCH_PATH = "pitch";
+	private static final String LOCAL_PATH = "local";
 	
 	org.bukkit.Sound sound;
 	float volume = 1.0f;
 	float pitch = 1.0f;
+	boolean local = true;
 	
 	@Override
 	public void initialize() throws Exception {
@@ -37,12 +39,18 @@ public class Sound extends Effect {
 		if (getConfig().isDouble(PITCH_PATH))
 			pitch = (float) getConfig().getDouble(PITCH_PATH);
 		
+		if (getConfig().isBoolean(LOCAL_PATH))
+			local = getConfig().getBoolean(LOCAL_PATH);
+		
 	}
 	
 	@Override
 	public void run(Player player) {
 		
-		player.playSound(player.getLocation(), sound, volume, pitch);
+		if (local)
+			player.getWorld().playSound(player.getLocation(), sound, volume, pitch);
+		else
+			player.playSound(player.getLocation(), sound, volume, pitch);
 		
 	}
 	

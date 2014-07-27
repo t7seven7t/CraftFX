@@ -107,19 +107,14 @@ public abstract class Effect {
 	public void initialize() throws Exception { }
 		
 	public void begin(Player player) { }
-	
 	public void begin(LivingEntity entity) { }
 		
 	public void run(Location location) { }
-	
 	public void run(Player player) { }
-	
 	public void run(LivingEntity entity) { }
-	
 	public void run(Block block) { }
 		
 	public void end(Player player) { }
-	
 	public void end(LivingEntity entity) { }
 	
 	/**
