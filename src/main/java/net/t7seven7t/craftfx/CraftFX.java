@@ -175,13 +175,26 @@ public class CraftFX extends JavaPlugin {
 		
 	}
 	
-	public static ItemStack getCustomItem(String displayName) {
+	/**
+	 * Searches for an item registered in CraftFX firstly by unique name (the key it was registered with)
+	 * and then by display name. Note that multiple items can share the same display name.
+	 * @param name
+	 * @return an ItemStack clone of the original
+	 */
+	public static ItemStack getCustomItem(String name) {
 		
+	    for (ItemData data : plugin.getItemDataList()) {
+	        
+	        if (ChatColor.stripColor(data.getName()).equals(ChatColor.stripColor(name)))
+	            return data.getItem();
+	        
+	    }
+	    
 		for (ItemData data : plugin.getItemDataList()) {
 			
 			ItemStack item = data.getItem();
 			
-			if (ChatColor.stripColor(item.getItemMeta().getDisplayName()).equals(ChatColor.stripColor(displayName)))
+			if (ChatColor.stripColor(item.getItemMeta().getDisplayName()).equals(ChatColor.stripColor(name)))
 				return item;
 			
 		}
