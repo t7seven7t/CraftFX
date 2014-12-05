@@ -56,12 +56,14 @@ public class ItemLoader {
 		boolean ignoreLevelRestriction = plugin.getConfig().getBoolean("enchants-ignore-level-restriction");
 
 		List<ConfigurationSection> parents = getParentConfigurationSections();
-		parents.add(plugin.getConfig().getConfigurationSection("items"));
+		if (plugin.getConfig().contains("items")) {
+		    parents.add(plugin.getConfig().getConfigurationSection("items"));
+		}
 		
 		ConfigurationSection section;	
 		
 		for (ConfigurationSection parent : parents) {
-			
+		    			
 			for (String name : parent.getKeys(false)) {
 				
 				section = parent.getConfigurationSection(name);
