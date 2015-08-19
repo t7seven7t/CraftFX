@@ -19,6 +19,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.material.MaterialData;
 import org.bukkit.potion.PotionEffect;
 
 import java.io.File;
@@ -71,8 +72,7 @@ public class ItemLoader {
         int effects = 0;
         for (ItemDefinition i : items) {
             try {
-                loadTriggers(i);
-                loadRecipes(i);
+                postLoad(i);
                 plugin.getItemRegistry().register(i);
             } catch (Exception e) {
                 logException(i.getName(), e);
@@ -151,7 +151,12 @@ public class ItemLoader {
         if (!config.contains(MATERIAL)) {
             throw new Exception("Config does not contain material path '" + MATERIAL + "'");
         }
-        ItemStack item = MaterialDataUtil.getMaterialData(config.getString(MATERIAL)).toItemStack();
+
+        MaterialData data = MaterialDataUtil.getMaterialData(config.getString(MATERIAL));
+        if (data == null) {
+            throw new Exception("Material '" + config.getString(MATERIAL) + "' is invalid.");
+        }
+        ItemStack item = data.toItemStack(1);
 
         if (config.contains(DURABILITY)) {
             item.setDurability((short) config.getInt(DURABILITY));
@@ -160,10 +165,8 @@ public class ItemLoader {
         ItemMeta meta = item.getItemMeta();
 
         // Set custom name of item
-        if (config.contains(NAME)) {
-            String name = FormatUtil.format(config.getString(NAME, config.getName()));
-            meta.setDisplayName(name);
-        }
+        String name = FormatUtil.format(config.getString(NAME, config.getName()));
+        meta.setDisplayName(name);
 
         // Add lore
         addLore(meta, config);
@@ -252,11 +255,13 @@ public class ItemLoader {
      * @param config Config to read from
      */
     private void addLore(ItemMeta meta, ConfigurationSection config) {
-        List<String> lore = null;
+        List<String> lore;
         if (config.isList(LORE)) {
             lore = config.getStringList(LORE);
         } else if (config.contains(LORE)) {
             lore = Arrays.asList(config.getString(LORE).split("\\|"));
+        } else {
+            return;
         }
         // Replace color codes: as well as set lore
         meta.setLore(lore.stream().map(l -> FormatUtil.format(l)).collect(Collectors.toList()));
@@ -325,7 +330,7 @@ public class ItemLoader {
     /**
      * Load recipes for this item from the config but doesn't yet register them to the server
      */
-    private void loadRecipes(ItemDefinition item) {
+    private void loadRecipes(ItemDefinition item) throws Exception {
         if (item.config.contains(RECIPE)) {
             item.recipeList.add(
                     recipeLoader.load(item, item.config.getConfigurationSection(RECIPE)));
