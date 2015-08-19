@@ -1,0 +1,6 @@
+name: CraftFX
+main: net.t7seven7t.craftfx.CraftFX
+version: "${version}"
+author: t7seven7t
+description: >
+             CraftFX allows new custom item creation along with customizable effects and recipes.
