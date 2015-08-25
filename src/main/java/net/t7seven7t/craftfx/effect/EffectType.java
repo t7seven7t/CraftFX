@@ -75,6 +75,7 @@ public class EffectType {
      */
     static void loadDefaults() {
         // TODO: add all pre-defined effect types here
+        registerEffectType(Fly::new);
     }
 
     /**
