@@ -9,7 +9,7 @@ eclipse
 
 bin
 build
-target
+/target
 gradle
 .gradle
 forge-download
