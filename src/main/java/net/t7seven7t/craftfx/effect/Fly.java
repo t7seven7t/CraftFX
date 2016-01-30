@@ -19,8 +19,8 @@ public class Fly extends ExtentEffect {
 
     @Override
     public boolean start(RunSpecification spec) {
-        if (spec.getTarget().getTarget() instanceof Player) {
-            final Player target = (Player) spec.getTarget().getTarget();
+        if (spec.getTargetRaw() instanceof Player) {
+            final Player target = (Player) spec.getTargetRaw();
             target.setAllowFlight(true);
             target.setVelocity(target.getVelocity().setY(1f));
             target.setFlySpeed(getData(SpeedData.class).getSpeed());

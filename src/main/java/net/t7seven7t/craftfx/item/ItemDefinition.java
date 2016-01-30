@@ -4,12 +4,14 @@ import com.google.common.collect.Lists;
 
 import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.trigger.Trigger;
+import net.t7seven7t.craftfx.trigger.TriggerType;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -42,7 +44,8 @@ public class ItemDefinition {
      *
      * @throws Exception if an error occurred while interpreting the config
      */
-    public ItemDefinition(final ItemStack item, final ConfigurationSection config) throws Exception {
+    public ItemDefinition(final ItemStack item,
+                          final ConfigurationSection config) throws Exception {
         this.name = config.getName(); // root key as specified in config
         this.config = config;
         this.item = item;
@@ -64,6 +67,11 @@ public class ItemDefinition {
 
     public List<Trigger> getTriggers() {
         return triggerList;
+    }
+
+    public List<Trigger> getTriggers(TriggerType type) {
+        return triggerList.stream().filter(t -> type.equals(t.getType())).collect(
+                Collectors.toList());
     }
 
     public List<Recipe> getRecipes() {

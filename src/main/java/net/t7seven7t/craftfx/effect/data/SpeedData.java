@@ -5,7 +5,7 @@ import net.t7seven7t.craftfx.effect.EffectData;
 import java.util.Optional;
 
 /**
- *
+ * Accessor for effects that need to get a player speed.
  */
 public class SpeedData extends EffectData {
     private final float def;
