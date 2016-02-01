@@ -1,2 +1,5 @@
 rootProject.name = 'CraftFX'
-
+include 'NMSAdapter-v1_8_R1'
+include 'NMSAdapter-v1_8_R2'
+include 'NMSAdapter-v1_8_R3'
+include 'NMSAdapter'

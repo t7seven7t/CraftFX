@@ -1,17 +1,13 @@
 package net.t7seven7t.craftfx.item;
 
-import com.google.common.collect.Lists;
-
 import net.t7seven7t.craftfx.CraftFX;
-import net.t7seven7t.craftfx.trigger.Trigger;
-import net.t7seven7t.craftfx.trigger.TriggerType;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  *
@@ -31,10 +27,6 @@ public class ItemDefinition {
      */
     final ConfigurationSection config;
     /**
-     * List of triggers that this item watches
-     */
-    final List<Trigger> triggerList;
-    /**
      * List of recipes that can create this item
      */
     final List<Recipe> recipeList;
@@ -49,29 +41,34 @@ public class ItemDefinition {
         this.name = config.getName(); // root key as specified in config
         this.config = config;
         this.item = item;
-        this.triggerList = Lists.newArrayList();
-        this.recipeList = Lists.newArrayList();
+        this.recipeList = new ArrayList<>();
     }
 
+    /**
+     * The unique name of this ItemDefinition
+     *
+     * @return name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * The Bukkit ItemStack representation
+     *
+     * @return an ItemStack
+     */
     public ItemStack getItem() {
         return item.clone();
     }
 
+    /**
+     * Configuration Information
+     *
+     * @return config
+     */
     public ConfigurationSection getConfig() {
         return config;
-    }
-
-    public List<Trigger> getTriggers() {
-        return triggerList;
-    }
-
-    public List<Trigger> getTriggers(TriggerType type) {
-        return triggerList.stream().filter(t -> type.equals(t.getType())).collect(
-                Collectors.toList());
     }
 
     public List<Recipe> getRecipes() {
@@ -79,7 +76,6 @@ public class ItemDefinition {
     }
 
     public boolean isSimilar(ItemStack item) {
-        return CraftFX.getInstance().getItemRegistry().isSimilar(this.item, item);
+        return CraftFX.instance().getItemRegistry().isSimilar(this.item, item);
     }
-
 }

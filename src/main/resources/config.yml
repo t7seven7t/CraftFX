@@ -1,46 +1,4 @@
 # Whether to print stack traces
 debug: false
 # Custom items below
-items:
-  "&et7seven7t's Head":
-    id: skull item:3
-    lore: "What is this?"
-    owner: Chim
-    recipe:
-      type: shapeless
-      amount: 2
-      ingredients:
-        - grass
-        - sand
-#    trigger:
-#      type: [right click air, right click block]
-#      effect:
-#        type: potion
-#        potion-effects: jump,60,5
-#        cancel-event: true
-  Boots of Flying:
-    id: gold boots
-    lore: "&6Know how to fly?"
-    recipe:
-      type: shaped
-      ingredients:
-        - "gold boots,a"
-        - "feather,b"
-      shape: [" a", "b "]
-#    trigger:
-#      type: equip
-#      effect:
-#        type: fly
-  &4Red button:
-    id: redstone dust
-    lore: "&4&lEXPLOSIVO!|&4&LBOOM BOOM"
-#    trigger:
-#      type: [left click air, left click block]
-#      effect:
-#        type: explosion
-#        power: 20
-    recipe:
-      type: shaped
-      shape: [a, b, b]
-      ingredients: ["tnt,a", "stick,b"]
-    cooldown: 0.4
+items: {}

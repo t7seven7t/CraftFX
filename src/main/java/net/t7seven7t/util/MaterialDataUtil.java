@@ -19,16 +19,17 @@ import org.bukkit.material.Wool;
 
 import java.util.function.Function;
 
+import static org.bukkit.Material.matchMaterial;
+
 /**
- *
+ * Utility class for converting Strings to MaterialData objects
  */
 public class MaterialDataUtil {
 
-    @SuppressWarnings("deprecation")
     public static MaterialData getMaterialData(String identifier) {
-        String[] split = identifier.split(":");
+        String[] split = identifier.replaceAll("\\s+", "_").split("\\W");
         // TODO: Add additional material/name database like essentials/worldedit have
-        Material material = Material.matchMaterial(split[0]);
+        Material material = matchMaterial(split[0]);
 
         if (material == null) {
             return null;

@@ -5,9 +5,10 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 
 /**
- * Utility methods for accessing enums
+ * Utility class for matching Strings to enum values or constants within enum-like classes
  */
 public class EnumUtil {
+
 
     public static <V extends Enum<V>> V matchEnumValue(Class<V> enumClass, String id) {
         return getValue(enumClass.getEnumConstants(), id);
@@ -29,8 +30,16 @@ public class EnumUtil {
     }
 
     private static <V> V getValue(V[] values, String id) {
-        String pattern = FormatUtil.makeConstant(id);
-        return Arrays.stream(values).filter(v -> pattern.equalsIgnoreCase(v.toString())).findAny().orElse(null);
+        String pattern = enumify(id);
+        return Arrays.stream(values)
+                .filter(v -> v != null)
+                .filter(v -> pattern.equalsIgnoreCase(v.toString()))
+                .findAny()
+                .orElse(null);
+    }
+
+    public static String enumify(String string) {
+        return string.toUpperCase().replaceAll("\\s+", "_").replaceAll("\\W", "");
     }
 
 }

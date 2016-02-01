@@ -1,7 +1,5 @@
 package net.t7seven7t.craftfx.recipe;
 
-import com.google.common.collect.Lists;
-
 import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.item.ItemDefinition;
 import net.t7seven7t.util.EnumUtil;
@@ -15,7 +13,9 @@ import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.material.MaterialData;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  *
@@ -23,13 +23,13 @@ import java.util.List;
 public class RecipeLoader {
 
     public Recipe load(ItemDefinition item, ConfigurationSection config) throws Exception {
-        ItemStack result = item.getItem(); // cloned
+        final ItemStack result = item.getItem(); // cloned
         // amount the recipe should produce
-        int amount = config.getInt("amount", 1);
+        final int amount = config.getInt("amount", 1);
         result.setAmount(amount);
 
-        RecipeType type = EnumUtil.matchEnumValue(RecipeType.class, config.getString("type"));
-        List<Ingredient> ingredients = getIngredients(config.getStringList("ingredients"));
+        final RecipeType type = EnumUtil.matchEnumValue(RecipeType.class, config.getString("type"));
+        final List<Ingredient> ingredients = getIngredients(config.getStringList("ingredients"));
 
         Recipe recipe;
 
@@ -41,7 +41,7 @@ public class RecipeLoader {
                 recipe = getShapelessRecipe(ingredients, result);
                 break;
             case FURNACE:
-                recipe = getFuranceRecipe(ingredients, result);
+                recipe = getFurnaceRecipe(ingredients, result);
                 break;
             default:
                 throw new Exception("Recipe type not specified for " + config.getName());
@@ -65,12 +65,12 @@ public class RecipeLoader {
         return recipe;
     }
 
-    private FurnaceRecipe getFuranceRecipe(List<Ingredient> ingredients, ItemStack item) {
+    private FurnaceRecipe getFurnaceRecipe(List<Ingredient> ingredients, ItemStack item) {
         return new FXFurnaceRecipe(item, ingredients.get(0).item);
     }
 
     private List<Ingredient> getIngredients(List<String> stringList) throws Exception {
-        List<Ingredient> ingredients = Lists.newArrayList();
+        List<Ingredient> ingredients = new ArrayList<>();
         for (String ingredientString : stringList) {
             // Split into material & amount/char
             String[] split = ingredientString.split(",");
@@ -79,12 +79,12 @@ public class RecipeLoader {
             MaterialData data = MaterialDataUtil.getMaterialData(split[0]);
             ItemStack item;
             if (data == null) {
-                ItemDefinition def = CraftFX.getInstance().getItemRegistry()
+                Optional<ItemDefinition> opt = CraftFX.instance().getItemRegistry()
                         .getDefinition(split[0]);
-                if (def == null) {
+                if (!opt.isPresent()) {
                     throw new Exception("Material name '" + split[0] + "' is invalid.");
                 }
-                item = def.getItem();
+                item = opt.get().getItem();
             } else {
                 item = data.toItemStack(1);
             }

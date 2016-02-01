@@ -1,6 +1,8 @@
 name: CraftFX
-main: net.t7seven7t.craftfx.CraftFX
-version: "${version}"
+main: net.t7seven7t.craftfx.CraftFXPlugin
 author: t7seven7t
+version: "${version}"
 description: >
              CraftFX allows new custom item creation along with customizable effects and recipes.
+commands:
+  fx:

@@ -31,3 +31,4 @@ public class FXFurnaceRecipe extends FurnaceRecipe {
         return this;
     }
 }
+

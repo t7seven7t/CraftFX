@@ -1,8 +1,5 @@
 package net.t7seven7t.craftfx.recipe;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-
 import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.item.ItemRegistry;
 
@@ -10,9 +7,12 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapelessRecipe;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
  */
 public class FXShapelessRecipe extends ShapelessRecipe {
 
-    private final List<ItemStack> ingredients = Lists.newArrayList();
+    private final List<ItemStack> ingredients = new ArrayList<>();
     private Map<ItemStack, Integer> itemCounts;
 
     /**
@@ -51,7 +51,7 @@ public class FXShapelessRecipe extends ShapelessRecipe {
      */
     public FXShapelessRecipe removeIngredient(int count, final ItemStack item) {
         final Iterator<ItemStack> it = ingredients.iterator();
-        final ItemRegistry registry = CraftFX.getInstance().getItemRegistry();
+        final ItemRegistry registry = CraftFX.instance().getItemRegistry();
         while (count > 0 && it.hasNext()) {
             ItemStack i = it.next();
             if (registry.isSimilar(i, item)) {
@@ -74,15 +74,15 @@ public class FXShapelessRecipe extends ShapelessRecipe {
      * Compares an ItemMatrix with the expected input for this recipe
      */
     public boolean matches(ItemStack[] matrix) {
-        ItemRegistry registry = CraftFX.getInstance().getItemRegistry();
+        ItemRegistry registry = CraftFX.instance().getItemRegistry();
         Map<ItemStack, Integer> matrixCount = getItemCount(matrix, registry);
         if (itemCounts == null) {
             itemCounts = getItemCount(ingredients.toArray(new ItemStack[0]), registry);
         }
         for (Map.Entry<ItemStack, Integer> entry : itemCounts.entrySet()) {
-            ItemStack item = registry.getMatching(entry.getKey(), matrixCount.keySet());
-            if (item != null) {
-                if (!entry.getValue().equals(matrixCount.get(item))) {
+            Optional<ItemStack> opt = registry.getMatching(entry.getKey(), matrixCount.keySet());
+            if (opt.isPresent()) {
+                if (!entry.getValue().equals(matrixCount.get(opt.get()))) {
                     return false;
                 }
             }
@@ -94,7 +94,7 @@ public class FXShapelessRecipe extends ShapelessRecipe {
      * Gets a map of item counts
      */
     private Map<ItemStack, Integer> getItemCount(ItemStack[] items, ItemRegistry registry) {
-        Map<ItemStack, Integer> result = Maps.newHashMap();
+        Map<ItemStack, Integer> result = new HashMap<>();
         for (ItemStack item : items) {
             boolean counted = false;
             for (Map.Entry<ItemStack, Integer> entry : result.entrySet()) {

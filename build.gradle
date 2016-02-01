@@ -1,32 +1,116 @@
-group 'net.t7seven7t.craftfx'
-version '0.1.0-SNAPSHOT'
+import java.util.regex.Pattern
 
-apply plugin: 'java'
-apply plugin: 'eclipse'
-apply plugin: 'idea'
-apply plugin: 'maven'
+println """
+=====================================
+Building CraftFX
+=====================================
+"""
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
-repositories {
-    mavenCentral()
-    maven {
-        name = "spigot"
-        url "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"
+buildscript {
+    repositories {
+        mavenCentral()
+        jcenter()
     }
-    maven {
-        name = "bungeecord"
-        url = "https://oss.sonatype.org/content/repositories/snapshots/"
+
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.0'
     }
 }
 
+def adapters = new ArrayList()
+
+allprojects {
+    apply plugin: 'java'
+    apply plugin: 'maven'
+    apply plugin: 'eclipse'
+    apply plugin: 'idea'
+
+    group 'net.t7seven7t.craftfx'
+    version '3.0.0-SNAPSHOT'
+    ext.internalVersion = version + ";" + gitCommitHash
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    repositories {
+        mavenCentral()
+        maven { url "https://hub.spigotmc.org/nexus/content/repositories/snapshots/" }
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+        maven { url "http://maven.sk89q.com/repo/" }
+    }
+
+    dependencies {
+        if (!project.name.equals("NMSAdapter")) compile project(':NMSAdapter')
+        compile group: 'org.spigotmc', name: 'spigot-api', version: '1.8.8-R0.1-SNAPSHOT'
+        compile group: 'net.md-5', name: 'bungeecord-chat', version: '1.8-SNAPSHOT'
+        compile group: 'com.sk89q.intake', name: 'intake', version: '4.2-SNAPSHOT'
+        compile fileTree(dir: rootProject.file('libs'), include: '*.jar')
+        testCompile group: 'junit', name: 'junit', version: '4.11'
+    }
+
+    if (project.name.startsWith('NMSAdapter-')) {
+        println "Adding adapter " + project.name
+        adapters.add(":" + project.name)
+    }
+}
+
+apply plugin: 'com.github.johnrengelman.shadow'
+
 dependencies {
-    compile group: 'org.spigotmc', name: 'spigot-api', version: '1.8.8-R0.1-SNAPSHOT'
-    compile group: 'net.md-5', name: 'bungeecord-chat', version: '1.8-SNAPSHOT'
-    testCompile group: 'junit', name: 'junit', version: '4.11'
+    def version_pattern = Pattern.compile("(\\w+)-(v.+)")
+    def versions = new ArrayList()
+    for (f in file('libs').listFiles()) {
+        def m = version_pattern.matcher(f.getName())
+        if (m.find()) {
+            def version = m.group(2).replace(".jar", "")
+            versions.add(version)
+            println "Found " + version + "!"
+        }
+    }
+
+    adapters.each { dep ->
+        for (v in versions) {
+            if (dep.endsWith(v)) {
+                compile project("${dep}")
+                break
+            }
+        }
+    }
 }
 
 processResources {
-    expand 'version' : version
+    filesMatching('plugin.yml') {
+        expand 'version': version
+    }
 }
+
+shadowJar {
+    outputs.upToDateWhen { false }
+    classifier ''
+    dependencies {
+        include(dependency(':NMSAdapter'))
+        for (dep in adapters) {
+            include(dependency("${dep}"))
+        }
+        include(dependency('com.sk89q.intake:intake:4.2-SNAPSHOT'))
+    }
+    exclude { it.file in rootProject.file('libs').listFiles() }
+    relocate('com.sk89q.intake', 'net.t7seven7t.craftfx.internal.intake')
+}
+
+task assembleJars(type: Copy) {
+    destinationDir = file('out')
+    from(tasks.withType(Jar)*.outputs)
+}
+
+task buildAll(group: 'build') {}
+build.finalizedBy(shadowJar)
+buildAll.dependsOn build
+buildAll.finalizedBy assembleJars
+
+task buildAndCleanAll(type: Delete, group: 'build') { delete 'out' }
+buildAndCleanAll.finalizedBy buildAll
+buildAndCleanAll.dependsOn clean
+buildAll.shouldRunAfter clean
+
+configure(build) { group 'other' }

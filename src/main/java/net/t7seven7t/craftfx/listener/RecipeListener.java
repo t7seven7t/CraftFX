@@ -1,5 +1,6 @@
 package net.t7seven7t.craftfx.listener;
 
+import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.item.ItemRegistry;
 import net.t7seven7t.craftfx.recipe.FXFurnaceRecipe;
 import net.t7seven7t.craftfx.recipe.FXShapedRecipe;
@@ -18,23 +19,20 @@ import org.bukkit.inventory.Recipe;
 import java.util.List;
 
 /**
- * Listens to events related to crafting items
+ * Listens to events related to item crafting
  */
 public class RecipeListener implements Listener {
 
-    private final ItemRegistry registry;
+    private final CraftFX fx = CraftFX.instance();
+    private final ItemRegistry registry = fx.getItemRegistry();
 
-    public RecipeListener(ItemRegistry registry) {
-        this.registry = registry;
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.HIGH)
     public void onPrepareItemCraft(PrepareItemCraftEvent event) {
         // Check custom items aren't used in non-plugin related recipes
         if (registry.getRecipes(event.getRecipe().getResult()).isEmpty()) {
             for (ItemStack item : event.getInventory().getMatrix()) {
-                // matrix item is registered checking:
-                if (registry.getDefinition(item) != null) {
+                // If any of the items in matrix are registered they are custom
+                if (registry.getDefinition(item).isPresent()) {
                     event.getInventory().setResult(null);
                     break;
                 }
@@ -46,41 +44,37 @@ public class RecipeListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.HIGH)
     public void onFurnaceBurn(FurnaceBurnEvent event) {
-        // Block custom items being used as fuel in furnace (TODO: add fuel power to items?)
-        if (registry.getDefinition(event.getFuel()) != null) {
+        // Block custom items being used as fuel in furnace (todo: add fuel power to items?)
+        if (registry.getDefinition(event.getFuel()).isPresent()) {
             event.setCancelled(true);
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.HIGH)
     public void onFurnaceSmelt(FurnaceSmeltEvent event) {
         List<Recipe> recipes = registry.getRecipes(event.getResult());
         // Check custom items not used in non-plugin recipes
         if (recipes.isEmpty()) {
-            if (registry.getDefinition(event.getSource()) != null) {
+            if (registry.getDefinition(event.getSource()).isPresent()) {
                 event.setCancelled(true);
             }
         }
         // Check if valid furnace recipe
-        else {
-            boolean hasRecipe = recipes.stream().filter(r -> r instanceof FXFurnaceRecipe)
-                    .map(r -> (FXFurnaceRecipe) r)
-                            // Check input matches with recipe
-                    .filter(r -> registry.isSimilar(r.getInput(), event.getSource())).findAny()
-                    .isPresent();
-
-            if (!hasRecipe) {
-                event.setCancelled(true);
-            }
+        else if (!recipes.stream().filter(r -> r instanceof FXFurnaceRecipe)
+                .map(r -> (FXFurnaceRecipe) r)
+                        // Check input matches the recipe
+                .filter(r -> registry.isSimilar(r.getInput(), event.getSource()))
+                .findAny().isPresent()) {
+            event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onBrew(BrewEvent event) {
-        // Block custom items being brewed into potions (TODO: add custom potion recipes?)
-        if (registry.getDefinition(event.getContents().getIngredient()) != null) {
+        // Block custom items being brewed into potions (todo: add custom potion recipes?)
+        if (registry.getDefinition(event.getContents().getIngredient()).isPresent()) {
             event.setCancelled(true);
         }
     }
@@ -88,16 +82,10 @@ public class RecipeListener implements Listener {
     private boolean recipeMatches(ItemStack result, ItemStack[] matrix) {
         List<Recipe> recipes = registry.getRecipes(result);
         for (Recipe recipe : recipes) {
-            if (recipe == null) {
-                continue; // Why would this ever occur?
-            } else if (recipe instanceof FXShapedRecipe) {
-                if (((FXShapedRecipe) recipe).matches(matrix)) {
-                    return true;
-                }
+            if (recipe instanceof FXShapedRecipe) {
+                if (((FXShapedRecipe) recipe).matches(matrix)) return true;
             } else if (recipe instanceof FXShapelessRecipe) {
-                if (((FXShapelessRecipe) recipe).matches(matrix)) {
-                    return true;
-                }
+                if (((FXShapelessRecipe) recipe).matches(matrix)) return true;
             }
         }
         return false;

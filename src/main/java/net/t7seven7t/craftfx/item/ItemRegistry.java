@@ -1,20 +1,18 @@
 package net.t7seven7t.craftfx.item;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.MapMaker;
+import com.google.common.collect.ImmutableList;
 
 import net.md_5.bungee.api.ChatColor;
-import net.t7seven7t.craftfx.trigger.TriggerType;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 /**
  *
@@ -24,102 +22,117 @@ public class ItemRegistry {
     /**
      * List of all item definitions
      */
-    List<ItemDefinition> itemDefinitionList = Lists.newArrayList();
+    private final List<ItemDefinition> itemDefinitionList = new ArrayList<>();
 
     /**
-     * Map of trigger types to the items that own them
-     */
-    Map<TriggerType, List<ItemDefinition>> triggerTypeItemMap = new MapMaker().makeMap();
-
-    /**
-     * Registers an item definition with CraftFX. During this process recipes will be registered
-     * with the server
+     * Registers an item definition into this ItemRegistry. Recipes will be registered with the
+     * server
      *
-     * @param item Item definition to register
+     * @param item ItemDefinition to register
      */
     public void register(ItemDefinition item) {
         itemDefinitionList.add(item);
-        // Register recipes
-        item.getRecipes().forEach(Bukkit::addRecipe);
-
-        // Add item definition to trigger type mapping
-        item.getTriggers().forEach(t -> {
-            List<ItemDefinition> itemDefinitionList = triggerTypeItemMap.get(t.getType());
-            if (itemDefinitionList == null) {
-                itemDefinitionList = Lists.newArrayList();
-                triggerTypeItemMap.put(t.getType(), itemDefinitionList);
-            }
-            itemDefinitionList.add(item);
-        });
     }
 
     /**
-     * Gets a list of ItemDefinitions that have a trigger of the specified type.
-     */
-    public List<ItemDefinition> getTriggeredDefinitions(TriggerType type) {
-        return triggerTypeItemMap.get(type);
-    }
-
-    /**
-     * Gets a list of recipes registered for a specific ItemStack
+     * Gets a list contianing all the ItemDefinitions that are registered
      *
-     * @return List of recipes or otherwise an empty list
+     * @return list of all ItemDefinitions
+     */
+    public List<ItemDefinition> getItemDefinitions() {
+        return ImmutableList.copyOf(itemDefinitionList);
+    }
+
+    /**
+     * Gets a list of recipes used to craft a specific ItemStack
+     *
+     * @param item the ItemStack
+     * @return A list of recipes
      */
     public List<Recipe> getRecipes(ItemStack item) {
-        ItemDefinition def = getDefinition(item);
-        if (def == null) {
-            return Collections.EMPTY_LIST;
-        }
-
-        return def.getRecipes();
+        final Optional<ItemDefinition> opt = getDefinition(item);
+        return opt.map(ItemDefinition::getRecipes).orElse(ImmutableList.of());
     }
 
     /**
-     * Gets the ItemStack from the collection given which matches an ItemStack by {@link
-     * ItemStack#isSimilar(ItemStack)} or null
+     * Gets the ItemStack from the given collection which matches the specified ItemStack by {@link
+     * ItemStack#isSimilar(ItemStack)}
+     *
+     * @param item       the ItemStack to match
+     * @param collection collection to search
+     * @return An Optional containing ItemStack if the collection contains a matching ItemStack,
+     * otherwise Optional.empty()
      */
-    public ItemStack getMatching(ItemStack item, Collection<ItemStack> collection) {
+    public Optional<ItemStack> getMatching(ItemStack item, Collection<ItemStack> collection) {
         for (ItemStack ingredient : collection) {
             if (isSimilar(ingredient, item)) {
-                return ingredient;
+                return Optional.ofNullable(ingredient);
             }
         }
 
-        return null;
+        return Optional.empty();
     }
 
     /**
-     * Gets an ItemDefinition for a specific ItemStack
+     * Searches for a registered item firstly by the unique key that it was registered with, and
+     * then by its display name. Searches are not case sensitive.
+     *
+     * @param name name the item was registered as
+     * @return An Optional containing ItemDefinition if it exists, otherwise Optional.empty()
      */
-    public ItemDefinition getDefinition(ItemStack item) {
+    public Optional<ItemDefinition> matchDefinition(String name) {
+        name = ChatColor.stripColor(name);
+        for (ItemDefinition def : itemDefinitionList) {
+            if (name.equalsIgnoreCase(ChatColor.stripColor(def.getName()))) {
+                return Optional.of(def);
+            }
+        }
+
+        for (ItemDefinition def : itemDefinitionList) {
+            if (name.equalsIgnoreCase(
+                    ChatColor.stripColor(def.getItem().getItemMeta().getDisplayName()))) {
+                return Optional.of(def);
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Searches for an ItemDefinition matching the specified ItemStack
+     *
+     * @param item the ItemStack to match
+     * @return An Optional containing ItemDefinition if found, otherwise Optional.empty()
+     */
+    public Optional<ItemDefinition> getDefinition(ItemStack item) {
         for (ItemDefinition def : itemDefinitionList) {
             if (def.isSimilar(item)) {
-                return def;
+                return Optional.of(def);
             }
         }
-
-        return null;
+        return Optional.empty();
     }
 
     /**
-     * Searches for a registered item firstly by the unique key it was registered with and then by
-     * its display name. Searches are case sensitive
+     * Searches for a registered item firstly by the unique key that it was registered with, and
+     * then by its display name. Searches are case sensitive.
+     *
+     * @param name name the item was registered as
+     * @return An Optional containing ItemDefinition if it exists, otherwise Optional.empty()
      */
-    public ItemDefinition getDefinition(String name) {
+    public Optional<ItemDefinition> getDefinition(String name) {
         name = ChatColor.stripColor(name);
-        for (ItemDefinition item : itemDefinitionList) {
-            if (name.equals(ChatColor.stripColor(item.getName()))) {
-                return item;
+        for (ItemDefinition def : itemDefinitionList) {
+            if (name.equals(ChatColor.stripColor(def.getName()))) {
+                return Optional.of(def);
             }
         }
 
-        for (ItemDefinition item : itemDefinitionList) {
-            if (name.equals(ChatColor.stripColor(item.getItem().getItemMeta().getDisplayName()))) {
-                return item;
+        for (ItemDefinition def : itemDefinitionList) {
+            if (name.equals(ChatColor.stripColor(def.getItem().getItemMeta().getDisplayName()))) {
+                return Optional.of(def);
             }
         }
-
-        return null;
+        return Optional.empty();
     }
 
     /**
@@ -143,11 +156,11 @@ public class ItemRegistry {
         return item1.getType().equals(item2.getType())
                 && item1.hasItemMeta() == item2.hasItemMeta()
                 // Check durability for tools:
-                && (item1.getType().getMaxDurability() > 0 ? item1.getDurability() == item2
-                .getDurability() : true)
+                && (item1.getType().getMaxDurability() <= 0 || item1.getDurability() == item2
+                .getDurability())
                 // Check item meta:
-                && (item1.hasItemMeta() ? Bukkit.getItemFactory().equals(item1.getItemMeta(),
-                item2.getItemMeta()) : true);
+                && (!item1.hasItemMeta() || Bukkit.getItemFactory()
+                .equals(item1.getItemMeta(), item2.getItemMeta()));
     }
 
 }

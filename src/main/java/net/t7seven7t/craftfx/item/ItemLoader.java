@@ -1,14 +1,12 @@
 package net.t7seven7t.craftfx.item;
 
-import com.google.common.collect.Lists;
-
 import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.recipe.RecipeLoader;
-import net.t7seven7t.craftfx.trigger.TriggerLoader;
-import net.t7seven7t.util.FormatUtil;
+import net.t7seven7t.craftfx.util.MessageUtil;
 import net.t7seven7t.util.MaterialDataUtil;
 import net.t7seven7t.util.PotionEffectUtil;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -23,9 +21,9 @@ import org.bukkit.material.MaterialData;
 import org.bukkit.potion.PotionEffect;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -42,95 +40,74 @@ import static net.t7seven7t.craftfx.item.ItemLoader.ConfigPath.POTION_EFFECTS;
 import static net.t7seven7t.craftfx.item.ItemLoader.ConfigPath.RECIPE;
 import static net.t7seven7t.craftfx.item.ItemLoader.ConfigPath.RECIPES_SECTION;
 import static net.t7seven7t.craftfx.item.ItemLoader.ConfigPath.TITLE;
-import static net.t7seven7t.craftfx.item.ItemLoader.ConfigPath.TRIGGER;
-import static net.t7seven7t.craftfx.item.ItemLoader.ConfigPath.TRIGGERS_SECTION;
 
 /**
  *
  */
 public class ItemLoader {
 
-    private final TriggerLoader triggerLoader;
-    private final RecipeLoader recipeLoader;
-    private final CraftFX plugin;
+    private final RecipeLoader recipeLoader = new RecipeLoader();
+    private final CraftFX fx = CraftFX.instance();
 
-    public ItemLoader(final CraftFX plugin) {
-        this.triggerLoader = new TriggerLoader();
-        this.recipeLoader = new RecipeLoader();
-        this.plugin = plugin;
-    }
-
-    /**
-     * Loads all ItemDefinitions from known places (config.items, all .yml files in items dir)
-     */
     public void loadItems() {
         List<ConfigurationSection> roots = getRootConfigurationSections();
-        List<ItemDefinition> items = Lists.newArrayList();
+        List<ItemDefinition> items = new ArrayList<>();
         roots.forEach(c -> items.addAll(loadItems(c)));
+        items.forEach(i -> fx.getItemRegistry().register(i));
         int recipes = 0;
-        int triggers = 0;
-        int effects = 0;
         for (ItemDefinition i : items) {
             try {
                 postLoad(i);
-                plugin.getItemRegistry().register(i);
             } catch (Exception e) {
                 logException(i.getName(), e);
-                break;
+                continue;
             }
-
-            triggers += i.getTriggers().size();
             recipes += i.getRecipes().size();
-            effects += i.getTriggers().stream().mapToInt(t -> t.getEffects().size()).sum();
         }
+        CraftFX.log().info("%s items loaded. %s recipes added.", items.size(), recipes);
+    }
 
-        plugin.getLogger().info(items.size() + " items loaded with " + recipes + " recipes, " +
-                triggers + " triggers and " + effects + " effects.");
+    private void logException(String name, Throwable t) {
+        CraftFX.log().severe("Item '%s' encountered the problem: %s", name, t.getMessage(), t);
     }
 
     /**
-     * Handles logging of an exception
-     */
-    private void logException(String name, Exception e) {
-        plugin.getLogger().log(Level.SEVERE,
-                "Item '" + name + "' encountered the problem: " + e.getMessage());
-
-        if (plugin.getConfig().getBoolean("debug", false)) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Gets a list of ConfigurationSections from places where CraftFX may expect items to load from
+     * Gets a list of ConfigurationSections for all the places where CraftFX may expect to load
+     * items from
+     *
+     * @return List of ConfigurationSections
      */
     private List<ConfigurationSection> getRootConfigurationSections() {
-        List<ConfigurationSection> list = Lists.newArrayList();
-        if (plugin.getConfig().contains("items")) {
-            list.add(plugin.getConfig().getConfigurationSection("items"));
+        final List<ConfigurationSection> ret = new ArrayList<>();
+        if (CraftFX.plugin().getConfig().contains("items")) {
+            ret.add(CraftFX.plugin().getConfig().getConfigurationSection("items"));
         }
 
-        File itemsFolder = new File(plugin.getDataFolder(), "items");
+        File itemsFolder = new File(CraftFX.plugin().getDataFolder(), "items");
         if (!itemsFolder.exists()) {
             itemsFolder.mkdir();
-            return list;
+            return ret;
         }
 
-        Pattern p = Pattern.compile("\\.jar$");
+        final Pattern p = Pattern.compile("\\.jar$");
         for (File file : itemsFolder.listFiles()) {
             if (p.matcher(file.getName()).find()) {
-                list.add(YamlConfiguration.loadConfiguration(file));
+                ret.add(YamlConfiguration.loadConfiguration(file));
             }
         }
 
-        return list;
+        return ret;
     }
 
     /**
      * Loads a list of ItemDefinitions from a configuration. Recipes and triggers for items have not
      * yet been created
+     *
+     * @param config config section to load from
+     * @return a list of ItemDefinitions
      */
     private List<ItemDefinition> loadItems(ConfigurationSection config) {
-        List<ItemDefinition> items = Lists.newArrayList();
+        List<ItemDefinition> items = new ArrayList<>();
         config.getKeys(false).forEach(k -> {
             try {
                 ConfigurationSection section = config.getConfigurationSection(k);
@@ -145,7 +122,11 @@ public class ItemLoader {
 
     /**
      * Creates an ItemStack from a configuration. More information regarding the format of the
-     * config can be found in README.MD
+     * config can be found in the readme and wiki documentation.
+     *
+     * @param config config section to load from
+     * @return an ItemStack
+     * @throws Exception any exception thrown while attempting to load the item
      */
     public ItemStack loadItem(ConfigurationSection config) throws Exception {
         if (!config.contains(MATERIAL)) {
@@ -156,7 +137,12 @@ public class ItemLoader {
         if (data == null) {
             throw new Exception("Material '" + config.getString(MATERIAL) + "' is invalid.");
         }
+
         ItemStack item = data.toItemStack(1);
+        if (!fx.getNmsInterface().isValidItem(item)) {
+            throw new Exception("Material '" + item.getType() + "' is no longer a valid " +
+                    "material in Minecraft 1.8+ and will not show in inventories.");
+        }
 
         if (config.contains(DURABILITY)) {
             item.setDurability((short) config.getInt(DURABILITY));
@@ -165,7 +151,7 @@ public class ItemLoader {
         ItemMeta meta = item.getItemMeta();
 
         // Set custom name of item
-        String name = FormatUtil.format(config.getString(NAME, config.getName()));
+        String name = MessageUtil.format(config.getString(NAME, config.getName()));
         meta.setDisplayName(name);
 
         // Add lore
@@ -264,7 +250,7 @@ public class ItemLoader {
             return;
         }
         // Replace color codes: as well as set lore
-        meta.setLore(lore.stream().map(l -> FormatUtil.format(l)).collect(Collectors.toList()));
+        meta.setLore(lore.stream().map(l -> MessageUtil.format(l)).collect(Collectors.toList()));
     }
 
     /**
@@ -323,8 +309,8 @@ public class ItemLoader {
      * Signalises that all item definitions have been created and can be used in recipes, etc
      */
     private void postLoad(ItemDefinition item) throws Exception {
-        loadRecipes(item); // TODO: Register recipes
-        loadTriggers(item); // TODO: add trigger types to quick search map
+        loadRecipes(item);
+        item.getRecipes().forEach(Bukkit::addRecipe);
     }
 
     /**
@@ -344,33 +330,6 @@ public class ItemLoader {
         }
     }
 
-    /**
-     * Loads all triggers and their effects from the config but doesn't yet register anything to
-     * CraftFX
-     */
-    private void loadTriggers(ItemDefinition item) throws Exception {
-        if (item.config.contains(TRIGGER)) {
-            loadTriggers(item, item.config.getConfigurationSection(TRIGGER));
-        }
-
-        if (item.config.contains(TRIGGERS_SECTION)) {
-            for (String key : item.config.getConfigurationSection(TRIGGERS_SECTION)
-                    .getKeys(false)) {
-                loadTriggers(item,
-                        item.config.getConfigurationSection(TRIGGERS_SECTION + "." + key));
-            }
-        }
-    }
-
-    /**
-     * Loads a trigger and its effects
-     *
-     * @param config config section to read from
-     */
-    private void loadTriggers(ItemDefinition item, ConfigurationSection config) throws Exception {
-        item.triggerList.addAll(triggerLoader.loadTriggers(config, item));
-    }
-
     public static final class ConfigPath {
         public static final String NAME = "name";
         public static final String MATERIAL = "id";
@@ -388,4 +347,5 @@ public class ItemLoader {
         public static final String TRIGGER = "trigger";
         public static final String TRIGGERS_SECTION = "triggers";
     }
+
 }

@@ -1,7 +1,5 @@
 package net.t7seven7t.craftfx.recipe;
 
-import com.google.common.collect.Maps;
-
 import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.item.ItemRegistry;
 
@@ -9,6 +7,7 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -16,7 +15,7 @@ import java.util.Map;
  */
 public class FXShapedRecipe extends ShapedRecipe {
 
-    private Map<Character, ItemStack> ingredients = Maps.newHashMap();
+    private Map<Character, ItemStack> ingredients = new HashMap<>();
     private ItemStack[] items;
     private int width, height;
 
@@ -61,7 +60,7 @@ public class FXShapedRecipe extends ShapedRecipe {
      */
     @Override
     public Map<Character, ItemStack> getIngredientMap() {
-        Map<Character, ItemStack> result = Maps.newHashMap();
+        Map<Character, ItemStack> result = new HashMap<>();
         for (Map.Entry<Character, ItemStack> entry : ingredients.entrySet()) {
             result.put(entry.getKey(), entry.getValue() == null ? null : entry.getValue().clone());
         }
@@ -81,7 +80,7 @@ public class FXShapedRecipe extends ShapedRecipe {
 
             for (int i = 0; i < height; i++) {
                 for (int j = 0; j < width; j++) {
-                    items[i+j] = ingredients.get(shape.toCharArray()[i+j]);
+                    items[i + j] = ingredients.get(shape.toCharArray()[i + j]);
                 }
             }
         }
@@ -99,7 +98,7 @@ public class FXShapedRecipe extends ShapedRecipe {
 
     private boolean matches(ItemStack[] matrix, int iOff, int jOff, boolean reverse) {
         ItemStack item1, item2;
-        ItemRegistry registry = CraftFX.getInstance().getItemRegistry();
+        ItemRegistry registry = CraftFX.instance().getItemRegistry();
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                 int i1 = i - iOff;
@@ -122,8 +121,6 @@ public class FXShapedRecipe extends ShapedRecipe {
                 }
             }
         }
-
         return true;
     }
-
 }
