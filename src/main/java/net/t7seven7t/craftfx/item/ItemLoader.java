@@ -34,6 +34,7 @@ import static net.t7seven7t.craftfx.item.ItemLoader.ConfigPath.LEATHER_ARMOR;
 import static net.t7seven7t.craftfx.item.ItemLoader.ConfigPath.LORE;
 import static net.t7seven7t.craftfx.item.ItemLoader.ConfigPath.MATERIAL;
 import static net.t7seven7t.craftfx.item.ItemLoader.ConfigPath.NAME;
+import static net.t7seven7t.craftfx.item.ItemLoader.ConfigPath.NBT;
 import static net.t7seven7t.craftfx.item.ItemLoader.ConfigPath.OWNER;
 import static net.t7seven7t.craftfx.item.ItemLoader.ConfigPath.PAGES;
 import static net.t7seven7t.craftfx.item.ItemLoader.ConfigPath.POTION_EFFECTS;
@@ -180,6 +181,17 @@ public class ItemLoader {
 
         // Update item meta
         item.setItemMeta(meta);
+
+        if (config.contains(NBT)) {
+            String nbt = config.getString(NBT);
+            if (!nbt.matches("\\{.+\\}")) {
+                nbt = "{" + nbt + "}";
+            }
+            item = fx.getNmsInterface().applyNBT(item, nbt);
+        }
+
+        item = fx.getNmsInterface().applyNBT(item,
+                "{AttributeModifiers:[{AttributeName:\"craftfx.item\",Name:\"craftfx.item\",Amount:0,Operation:0,UUIDLeast:32000,UUIDMost:42}]}");
 
         return item;
     }
@@ -346,6 +358,7 @@ public class ItemLoader {
         public static final String RECIPES_SECTION = "recipes";
         public static final String TRIGGER = "trigger";
         public static final String TRIGGERS_SECTION = "triggers";
+        public static final String NBT = "nbt";
     }
 
 }

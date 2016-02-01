@@ -9,9 +9,8 @@ import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.item.ItemDefinition;
 import net.t7seven7t.util.intake.module.annotation.Sender;
 
-import org.bukkit.Material;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,26 +29,22 @@ public class AdminCommands {
             usage = "command-give-usage"
     )
     public void giveItem(CraftFX fx, @Sender Player player, @Text String name) {
-        Optional<ItemDefinition> opt = fx.getItemRegistry().matchDefinition(name);
+        Optional<ItemDefinition> opt = fx.getItemRegistry().matchDefinition(name.trim());
         if (opt.isPresent()) {
             player.getInventory().addItem(opt.get().getItem());
         } else {
             message(player, "No comprende");
         }
-
-        ItemStack i = new ItemStack(Material.FIRE, 16);
-        message(player, "%s", i);
-        player.getInventory().addItem(i);
     }
 
     @Command(
             aliases = {"list", "li"},
             desc = "command-list-desc",
-            usage = "command-give-usage"
+            usage = "command-list-usage"
     )
-    public void listItems(CraftFX fx, @Sender Player player) {
+    public void listItems(CraftFX fx, CommandSender sender) {
         List<ItemDefinition> items = fx.getItemRegistry().getItemDefinitions();
-        message(player, Joiner.on(", ").join(items.stream()
+        message(sender, Joiner.on(", ").join(items.stream()
                 .map(ItemDefinition::getName).collect(Collectors.toList())));
     }
 

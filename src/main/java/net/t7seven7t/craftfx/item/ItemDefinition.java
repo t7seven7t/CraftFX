@@ -1,6 +1,7 @@
 package net.t7seven7t.craftfx.item;
 
 import net.t7seven7t.craftfx.CraftFX;
+import net.t7seven7t.craftfx.util.MessageUtil;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
@@ -38,7 +39,8 @@ public class ItemDefinition {
      */
     public ItemDefinition(final ItemStack item,
                           final ConfigurationSection config) throws Exception {
-        this.name = config.getName(); // root key as specified in config
+        // weird yaml error: Message#format will remove the double single quotes
+        this.name = MessageUtil.format(config.getName()); // root key as specified in config
         this.config = config;
         this.item = item;
         this.recipeList = new ArrayList<>();

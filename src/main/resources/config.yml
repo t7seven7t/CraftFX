@@ -1,4 +1,6 @@
 # Whether to print stack traces
 debug: false
+# If true CraftFX will attempt to remove items that have CraftFX NBT but are not registered anymore.
+remove-unregistered-items: false
 # Custom items below
 items: {}
