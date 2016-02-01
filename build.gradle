@@ -27,7 +27,6 @@ allprojects {
 
     group 'net.t7seven7t.craftfx'
     version '3.0.0-SNAPSHOT'
-    ext.internalVersion = version + ";" + gitCommitHash
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
@@ -64,7 +63,7 @@ dependencies {
         if (m.find()) {
             def version = m.group(2).replace(".jar", "")
             versions.add(version)
-            println "Found " + version + "!"
+            println "Found " + version + " sources!"
         }
     }
 

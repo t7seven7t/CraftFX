@@ -1,0 +1,8 @@
+command-help: '&3%1$s%2$s &b%3$s &2:: %4$s'
+command-help-header: '&3Help for ''%s'':'
+command-authorization-exception: '&cYou do not have permission to use this command.'
+
+command-give-desc: 'Give yourself items'
+command-give-usage: '<item name>'
+command-list-desc: 'List all custom items'
+command-list-usage: ''
