@@ -6,6 +6,7 @@ import net.t7seven7t.craftfx.listener.PlayerListener;
 import net.t7seven7t.craftfx.listener.RecipeListener;
 import net.t7seven7t.craftfx.nms.FallbackNMSAdapter;
 import net.t7seven7t.craftfx.nms.NMSInterface;
+import net.t7seven7t.craftfx.trigger.TriggerRegistry;
 import net.t7seven7t.craftfx.util.LogHelper;
 
 import org.bukkit.Bukkit;
@@ -25,6 +26,7 @@ public class CraftFX {
     private final LogHelper logHelper = new LogHelper();
     private final CraftFXPlugin plugin;
     private final ItemRegistry itemRegistry;
+    private final TriggerRegistry triggerRegistry;
     private final NMSInterface nmsInterface;
 
     CraftFX(CraftFXPlugin plugin) {
@@ -44,6 +46,7 @@ public class CraftFX {
         });
 
         itemRegistry = new ItemRegistry();
+        triggerRegistry = new TriggerRegistry();
         ItemLoader itemLoader = new ItemLoader();
         itemLoader.loadItems();
 
@@ -76,6 +79,7 @@ public class CraftFX {
         try {
             version = Bukkit.getServer().getClass().getPackage().getName().replace(".", ",")
                     .split(",")[3];
+
             log().info("Attempting to select NMSAdapter for version %s", version);
             Class<?> clazz = getClass().getClassLoader()
                     .loadClass("net.t7seven7t.craftfx.nms." + version + ".NMSAdapter");
@@ -90,6 +94,10 @@ public class CraftFX {
     public FileConfiguration getMessages(Locale locale) {
         // todo: add locale support?
         return ConfigType.MESSAGES.get();
+    }
+
+    public TriggerRegistry getTriggerRegistry() {
+        return triggerRegistry;
     }
 
     public ItemRegistry getItemRegistry() {

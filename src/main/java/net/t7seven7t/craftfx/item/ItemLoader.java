@@ -2,6 +2,7 @@ package net.t7seven7t.craftfx.item;
 
 import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.recipe.RecipeLoader;
+import net.t7seven7t.craftfx.trigger.TriggerLoader;
 import net.t7seven7t.craftfx.util.MessageUtil;
 import net.t7seven7t.util.MaterialDataUtil;
 import net.t7seven7t.util.PotionEffectUtil;
@@ -41,6 +42,8 @@ import static net.t7seven7t.craftfx.item.ItemLoader.ConfigPath.POTION_EFFECTS;
 import static net.t7seven7t.craftfx.item.ItemLoader.ConfigPath.RECIPE;
 import static net.t7seven7t.craftfx.item.ItemLoader.ConfigPath.RECIPES_SECTION;
 import static net.t7seven7t.craftfx.item.ItemLoader.ConfigPath.TITLE;
+import static net.t7seven7t.craftfx.item.ItemLoader.ConfigPath.TRIGGER;
+import static net.t7seven7t.craftfx.item.ItemLoader.ConfigPath.TRIGGERS_SECTION;
 
 /**
  *
@@ -48,6 +51,7 @@ import static net.t7seven7t.craftfx.item.ItemLoader.ConfigPath.TITLE;
 public class ItemLoader {
 
     private final RecipeLoader recipeLoader = new RecipeLoader();
+    private final TriggerLoader triggerLoader = new TriggerLoader();
     private final CraftFX fx = CraftFX.instance();
 
     public void loadItems() {
@@ -318,10 +322,12 @@ public class ItemLoader {
     }
 
     /**
-     * Signalises that all item definitions have been created and can be used in recipes, etc
+     * Signalises that all item definitions have been created and can be used in recipes, triggers,
+     * etc
      */
     private void postLoad(ItemDefinition item) throws Exception {
         loadRecipes(item);
+        loadTriggers(item);
         item.getRecipes().forEach(Bukkit::addRecipe);
     }
 
@@ -338,6 +344,23 @@ public class ItemLoader {
             for (String key : item.config.getConfigurationSection(RECIPES_SECTION).getKeys(false)) {
                 item.recipeList.add(recipeLoader.load(item,
                         item.config.getConfigurationSection(RECIPES_SECTION + "." + key)));
+            }
+        }
+    }
+
+    /**
+     * Load triggers for this item from the config
+     */
+    private void loadTriggers(ItemDefinition item) throws Exception {
+        if (item.config.contains(TRIGGER)) {
+            triggerLoader.loadTriggers(item, item.config.getConfigurationSection(TRIGGER));
+        }
+
+        if (item.config.contains(TRIGGERS_SECTION)) {
+            for (String key : item.config.getConfigurationSection(TRIGGERS_SECTION)
+                    .getKeys(false)) {
+                triggerLoader.loadTriggers(item,
+                        item.config.getConfigurationSection(TRIGGERS_SECTION + "." + key));
             }
         }
     }
