@@ -1,5 +1,6 @@
 package net.t7seven7t.craftfx.item;
 
+import net.md_5.bungee.api.ChatColor;
 import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.util.MessageUtil;
 
@@ -16,7 +17,7 @@ import java.util.List;
 public class ItemDefinition {
 
     /**
-     * The name of this item definition
+     * The unique name of this item definition
      */
     final String name;
     /**
@@ -31,6 +32,10 @@ public class ItemDefinition {
      * List of recipes that can create this item
      */
     final List<Recipe> recipeList;
+    /**
+     * The display name of this item
+     */
+    final String displayName;
 
     /**
      * Create a new ItemDefinition
@@ -40,10 +45,21 @@ public class ItemDefinition {
     public ItemDefinition(final ItemStack item,
                           final ConfigurationSection config) throws Exception {
         // weird yaml error: Message#format will remove the double single quotes
-        this.name = MessageUtil.format(config.getName()); // root key as specified in config
+        this.name = ChatColor.stripColor(MessageUtil.format(config.getName())).toLowerCase();
         this.config = config;
-        this.item = item;
+        this.item = CraftFX.instance().getNmsInterface()
+                .applyNBT(item, "{craftfx: \"" + name + "\"}");
         this.recipeList = new ArrayList<>();
+        this.displayName = item.getItemMeta().getDisplayName();
+    }
+
+    /**
+     * The display name of the Item defined by this ItemDefinition
+     *
+     * @return display name
+     */
+    public String getDisplayName() {
+        return displayName;
     }
 
     /**
@@ -79,5 +95,18 @@ public class ItemDefinition {
 
     public boolean isSimilar(ItemStack item) {
         return CraftFX.instance().getItemRegistry().isSimilar(this.item, item);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ItemDefinition that = (ItemDefinition) o;
+        return name.equals(that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
     }
 }

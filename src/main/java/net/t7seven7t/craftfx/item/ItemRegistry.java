@@ -1,18 +1,21 @@
 package net.t7seven7t.craftfx.item;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.MapMaker;
 
 import net.md_5.bungee.api.ChatColor;
+import net.t7seven7t.craftfx.CraftFX;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  *
@@ -22,7 +25,8 @@ public class ItemRegistry {
     /**
      * List of all item definitions
      */
-    private final List<ItemDefinition> itemDefinitionList = new ArrayList<>();
+    private final Set<ItemDefinition> itemDefinitionList = Collections
+            .newSetFromMap(new MapMaker().makeMap());
 
     /**
      * Registers an item definition into this ItemRegistry. Recipes will be registered with the
@@ -32,6 +36,16 @@ public class ItemRegistry {
      */
     public void register(ItemDefinition item) {
         itemDefinitionList.add(item);
+    }
+
+    /**
+     * Checks whether an item definition has been registered.
+     *
+     * @param item ItemDefinition to check
+     * @return true if the definition has already been registered
+     */
+    public boolean contains(ItemDefinition item) {
+        return itemDefinitionList.contains(item);
     }
 
     /**
@@ -81,16 +95,15 @@ public class ItemRegistry {
      * @return An Optional containing ItemDefinition if it exists, otherwise Optional.empty()
      */
     public Optional<ItemDefinition> matchDefinition(String name) {
-        name = ChatColor.stripColor(name);
+        name = ChatColor.stripColor(name).toLowerCase();
         for (ItemDefinition def : itemDefinitionList) {
-            if (name.equalsIgnoreCase(ChatColor.stripColor(def.getName()))) {
+            if (name.equals(ChatColor.stripColor(def.getName()))) {
                 return Optional.of(def);
             }
         }
 
         for (ItemDefinition def : itemDefinitionList) {
-            if (name.equalsIgnoreCase(
-                    ChatColor.stripColor(def.getItem().getItemMeta().getDisplayName()))) {
+            if (name.equalsIgnoreCase(ChatColor.stripColor(def.getDisplayName()))) {
                 return Optional.of(def);
             }
         }
@@ -128,7 +141,7 @@ public class ItemRegistry {
         }
 
         for (ItemDefinition def : itemDefinitionList) {
-            if (name.equals(ChatColor.stripColor(def.getItem().getItemMeta().getDisplayName()))) {
+            if (name.equals(ChatColor.stripColor(def.getDisplayName()))) {
                 return Optional.of(def);
             }
         }
@@ -151,6 +164,15 @@ public class ItemRegistry {
 
         if (item1 == item2) {
             return true;
+        }
+
+        try {
+            String id = CraftFX.instance().getNmsInterface().getCraftFXId(item1);
+            if (id != null && !id.isEmpty()) {
+                return id.equals(CraftFX.instance().getNmsInterface().getCraftFXId(item2));
+            }
+        } catch (UnsupportedOperationException e) {
+            // ignore & use display name check instead
         }
 
         return item1.getType().equals(item2.getType())

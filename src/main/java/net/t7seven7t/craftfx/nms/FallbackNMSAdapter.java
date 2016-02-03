@@ -21,4 +21,9 @@ public class FallbackNMSAdapter implements NMSInterface {
     public List<AttributeModifier> getAttributeModifiers(ItemStack item) {
         return ImmutableList.of();
     }
+
+    @Override
+    public String getCraftFXId(ItemStack item) {
+        throw new UnsupportedOperationException();
+    }
 }

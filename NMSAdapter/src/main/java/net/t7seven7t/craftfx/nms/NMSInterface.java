@@ -36,4 +36,13 @@ public interface NMSInterface {
      */
     List<AttributeModifier> getAttributeModifiers(ItemStack item);
 
+    /**
+     * Gets the value for the CraftFX NBT tag
+     *
+     * @param item item
+     * @return the unique id or null
+     * @throws UnsupportedOperationException if this method isn't implemented
+     */
+    String getCraftFXId(ItemStack item) throws UnsupportedOperationException;
+
 }

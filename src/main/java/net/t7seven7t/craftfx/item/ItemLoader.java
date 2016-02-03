@@ -116,8 +116,14 @@ public class ItemLoader {
         config.getKeys(false).forEach(k -> {
             try {
                 ConfigurationSection section = config.getConfigurationSection(k);
-                ItemStack item = loadItem(section);
-                items.add(new ItemDefinition(item, section));
+                ItemDefinition item = new ItemDefinition(loadItem(section), section);
+                if (fx.getItemRegistry().contains(item)) {
+                    throw new Exception("An item is already registered with the name " + k
+                            + ". (Color codes don't make a unique item. Consider changing the " +
+                            "'name' tag if you want two items with the same display name)");
+                }
+                fx.getItemRegistry().register(item);
+                items.add(item);
             } catch (Exception e) {
                 logException(k, e);
             }
@@ -156,7 +162,7 @@ public class ItemLoader {
         ItemMeta meta = item.getItemMeta();
 
         // Set custom name of item
-        String name = MessageUtil.format(config.getString(NAME, config.getName()));
+        String name = MessageUtil.color(config.getString(NAME, config.getName()));
         meta.setDisplayName(name);
 
         // Add lore
@@ -193,9 +199,6 @@ public class ItemLoader {
             }
             item = fx.getNmsInterface().applyNBT(item, nbt);
         }
-
-        item = fx.getNmsInterface().applyNBT(item,
-                "{AttributeModifiers:[{AttributeName:\"craftfx.item\",Name:\"craftfx.item\",Amount:0,Operation:0,UUIDLeast:1337,UUIDMost:39681}]}");
 
         return item;
     }

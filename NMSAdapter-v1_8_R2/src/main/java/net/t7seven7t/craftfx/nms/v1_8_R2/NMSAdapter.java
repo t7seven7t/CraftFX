@@ -66,4 +66,13 @@ public class NMSAdapter implements NMSInterface {
         }
         return list;
     }
+
+    @Override
+    public String getCraftFXId(ItemStack item) {
+        NBTTagCompound tag = CraftItemStack.asNMSCopy(item).getTag();
+        if (tag != null && tag.hasKeyOfType("craftfx", 8)) {
+            return tag.getString("craftfx");
+        }
+        return null;
+    }
 }
