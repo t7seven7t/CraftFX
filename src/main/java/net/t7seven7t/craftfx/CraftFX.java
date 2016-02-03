@@ -2,6 +2,7 @@ package net.t7seven7t.craftfx;
 
 import net.t7seven7t.craftfx.item.ItemLoader;
 import net.t7seven7t.craftfx.item.ItemRegistry;
+import net.t7seven7t.craftfx.listener.PlayerListener;
 import net.t7seven7t.craftfx.listener.RecipeListener;
 import net.t7seven7t.craftfx.nms.FallbackNMSAdapter;
 import net.t7seven7t.craftfx.nms.NMSInterface;
@@ -47,6 +48,7 @@ public class CraftFX {
         itemLoader.loadItems();
 
         registerListener(new RecipeListener());
+        registerListener(new PlayerListener());
     }
 
     public static CraftFX instance() {

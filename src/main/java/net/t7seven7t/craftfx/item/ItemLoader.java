@@ -191,7 +191,7 @@ public class ItemLoader {
         }
 
         item = fx.getNmsInterface().applyNBT(item,
-                "{AttributeModifiers:[{AttributeName:\"craftfx.item\",Name:\"craftfx.item\",Amount:0,Operation:0,UUIDLeast:32000,UUIDMost:42}]}");
+                "{AttributeModifiers:[{AttributeName:\"craftfx.item\",Name:\"craftfx.item\",Amount:0,Operation:0,UUIDLeast:1337,UUIDMost:39681}]}");
 
         return item;
     }
