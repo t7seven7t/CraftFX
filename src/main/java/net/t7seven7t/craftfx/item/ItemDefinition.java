@@ -94,7 +94,7 @@ public class ItemDefinition {
     }
 
     public boolean isSimilar(ItemStack item) {
-        return CraftFX.instance().getItemRegistry().isSimilar(this.item, item);
+        return CraftFX.instance().getItemRegistry().matchesDefinition(this, item);
     }
 
     @Override

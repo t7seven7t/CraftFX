@@ -185,4 +185,23 @@ public class ItemRegistry {
                 .equals(item1.getItemMeta(), item2.getItemMeta()));
     }
 
+    /**
+     * Checks whether an Item has the same unique id as a definition. If NBT ids are unsupported
+     * this method defaults to using the comparison described by {@link #isSimilar(ItemStack,
+     * ItemStack)}
+     *
+     * @param def  item definition
+     * @param item item
+     * @return true if the item's NBT id matches the item definition's name (ie. they match)
+     */
+    public boolean matchesDefinition(ItemDefinition def, ItemStack item) {
+        try {
+            if (item == null || item.getTypeId() == 0) return false;
+            String id = CraftFX.instance().getNmsInterface().getCraftFXId(item);
+            return id != null && id.equals(def.getName());
+        } catch (Exception e) {
+            return isSimilar(def.getItem(), item);
+        }
+    }
+
 }
