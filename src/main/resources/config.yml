@@ -2,5 +2,7 @@
 debug: false
 # If true CraftFX will attempt to remove items that have CraftFX NBT but are not registered anymore.
 remove-unregistered-items: false
+# If true CraftFX will attempt to update items that have been modified assuming they still have the same id
+update-items: false
 # Custom items below
 items: {}
