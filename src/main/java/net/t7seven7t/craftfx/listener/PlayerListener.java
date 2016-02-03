@@ -31,6 +31,7 @@ public class PlayerListener implements Listener {
                 && !fx.getConfig().getBoolean("update-items")) return;
         try {
             final ItemStack item = event.getItem().getItemStack();
+            if (item == null || item.getTypeId() == 0) return;
             final String id = fx.getNmsInterface().getCraftFXId(item);
             if (id == null || id.isEmpty()) return;
             final Optional<ItemDefinition> opt = fx.getItemRegistry().getDefinition(id);
@@ -75,6 +76,7 @@ public class PlayerListener implements Listener {
             ListIterator<ItemStack> it = inventory.iterator();
             while (it.hasNext()) {
                 final ItemStack item = it.next();
+                if (item == null || item.getTypeId() == 0) continue;
                 final String id = fx.getNmsInterface().getCraftFXId(item);
                 if (id == null || id.isEmpty()) continue;
                 final Optional<ItemDefinition> opt = fx.getItemRegistry().getDefinition(id);
