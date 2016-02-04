@@ -45,7 +45,8 @@ public class ItemDefinition {
     public ItemDefinition(final ItemStack item,
                           final ConfigurationSection config) throws Exception {
         // weird yaml error: Message#format will remove the double single quotes
-        this.name = ChatColor.stripColor(MessageUtil.format(config.getName())).toLowerCase();
+        this.name = ChatColor.stripColor(MessageUtil.format(config.getName())).toLowerCase()
+                .replaceAll("\\s+", "_");
         this.config = config;
         this.item = CraftFX.instance().getNmsInterface()
                 .applyNBT(item, "{craftfx: \"" + name + "\"}");

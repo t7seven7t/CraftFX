@@ -73,6 +73,7 @@ public class PlayerArgumentProvider<T> implements Provider<T> {
                                        Namespace namespace) throws ArgumentException, ProvisionException {
         CommandSender commandSender = namespace.get(CommandSender.class);
         Player sender = (commandSender instanceof Player) ? (Player) commandSender : null;
+        if (argument.equals("sender")) return ImmutableList.of(sender);
         Location from = sender != null ? sender.getLocation() :
                 Bukkit.getWorlds().get(0).getSpawnLocation();
 
@@ -98,7 +99,7 @@ public class PlayerArgumentProvider<T> implements Provider<T> {
         if (player != null) return ImmutableList.of(player);
 
         throw new ArgumentParseException(
-                String.format("No players by the name of '%s' is known.", argument));
+                String.format("No players by the name of '%s' are known.", argument));
     }
 
     private List<Player> getPlayers(Location from, String selector) {

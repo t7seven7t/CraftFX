@@ -121,10 +121,10 @@ public class Commands implements TabExecutor {
             MessageUtil.message(sender, "&c" + e.getMessage());
             CommandMapping mapping = getCommand(joinCommandArgs(command, args));
             if (mapping != null) {
-                MessageUtil.message(sender, "&cHelp: %s",
+                MessageUtil.message(sender, "&cHelp: %s", MessageUtil.translate(sender,
                         // show desc if help is null
                         mapping.getDescription().getHelp() == null ? mapping.getDescription()
-                                .getShortDescription() : mapping.getDescription().getHelp());
+                                .getShortDescription() : mapping.getDescription().getHelp()));
             }
         } catch (AuthorizationException e) {
             MessageUtil.message(sender, "command-authorization-exception");
@@ -163,6 +163,7 @@ public class Commands implements TabExecutor {
 
         if (dispatcher.testPermission(namespace)) {
             try {
+                // todo: fix tab completion in intake or replace with something else
                 return dispatcher.getSuggestions(joinCommandArgs(command, args), namespace);
             } catch (CommandException e) {
                 // o:

@@ -89,21 +89,25 @@ public class ItemRegistry {
 
     /**
      * Searches for a registered item firstly by the unique key that it was registered with, and
-     * then by its display name. Searches are not case sensitive.
+     * then by its display name. Searches are not case sensitive and items will match if they start
+     * with the specified String.
      *
      * @param name name the item was registered as
      * @return An Optional containing ItemDefinition if it exists, otherwise Optional.empty()
      */
     public Optional<ItemDefinition> matchDefinition(String name) {
-        name = ChatColor.stripColor(name).toLowerCase();
+        final Optional<ItemDefinition> exact = getDefinition(name);
+        if (exact.isPresent()) return exact;
+        final String lower = ChatColor.stripColor(name).toLowerCase();
+        final String lowerStripped = lower.replaceAll("\\s+", "_");
         for (ItemDefinition def : itemDefinitionList) {
-            if (name.equals(ChatColor.stripColor(def.getName()))) {
+            if (def.getName().startsWith(lowerStripped) || def.getName().startsWith(lower)) {
                 return Optional.of(def);
             }
         }
 
         for (ItemDefinition def : itemDefinitionList) {
-            if (name.equalsIgnoreCase(ChatColor.stripColor(def.getDisplayName()))) {
+            if (ChatColor.stripColor(def.getDisplayName()).startsWith(lower)) {
                 return Optional.of(def);
             }
         }
@@ -133,15 +137,16 @@ public class ItemRegistry {
      * @return An Optional containing ItemDefinition if it exists, otherwise Optional.empty()
      */
     public Optional<ItemDefinition> getDefinition(String name) {
-        name = ChatColor.stripColor(name);
+        final String lower = ChatColor.stripColor(name).toLowerCase();
+        final String lowerStripped = lower.replaceAll("\\s+", "_");
         for (ItemDefinition def : itemDefinitionList) {
-            if (name.equals(ChatColor.stripColor(def.getName()))) {
+            if (lowerStripped.equals(def.getName()) || lower.equals(def.getName())) {
                 return Optional.of(def);
             }
         }
 
         for (ItemDefinition def : itemDefinitionList) {
-            if (name.equals(ChatColor.stripColor(def.getDisplayName()))) {
+            if (lower.equalsIgnoreCase(ChatColor.stripColor(def.getDisplayName()))) {
                 return Optional.of(def);
             }
         }
