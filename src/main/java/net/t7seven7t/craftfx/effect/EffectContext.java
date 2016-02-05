@@ -1,6 +1,7 @@
 package net.t7seven7t.craftfx.effect;
 
 import net.t7seven7t.craftfx.item.ItemDefinition;
+import net.t7seven7t.craftfx.trigger.Trigger;
 import net.t7seven7t.craftfx.trigger.TriggerSpec;
 
 import org.bukkit.entity.Player;
@@ -18,6 +19,7 @@ public class EffectContext {
     // some kind of targeting params
     private final ItemDefinition itemDefinition;
     private final TriggerSpec triggerSpec;
+    private final Trigger trigger;
     private Map<String, Object> properties;
 
     /**
@@ -25,10 +27,16 @@ public class EffectContext {
      */
 
     public EffectContext(Player initiator, ItemDefinition itemDefinition,
-                         TriggerSpec triggerSpec) {
+                         TriggerSpec triggerSpec, Trigger trigger) {
         this.initiator = initiator;
         this.itemDefinition = itemDefinition;
         this.triggerSpec = triggerSpec;
+        this.trigger = trigger;
+
+    }
+
+    public Trigger getTrigger() {
+        return trigger;
     }
 
     public TriggerSpec getTriggerSpec() {

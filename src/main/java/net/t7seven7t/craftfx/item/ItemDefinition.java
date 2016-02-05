@@ -99,6 +99,14 @@ public class ItemDefinition {
     }
 
     @Override
+    public String toString() {
+        return "ItemDefinition{" +
+                "name='" + name + '\'' +
+                ", item=" + item +
+                '}';
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

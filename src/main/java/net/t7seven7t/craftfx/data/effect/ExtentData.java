@@ -51,6 +51,6 @@ public class ExtentData extends AbstractData {
 
     @Override
     public Data getCopy() {
-        return new ExtentData();
+        return new ExtentData(disabledDef, invertedDef);
     }
 }

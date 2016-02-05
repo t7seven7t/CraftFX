@@ -28,6 +28,17 @@ public class TriggerContext implements DataInterface {
         this.target = target instanceof Target ? (Target) target : new Target(target);
     }
 
+    @Override
+    public String toString() {
+        return "TriggerContext{" +
+                "initiator=" + initiator +
+                ", target=" + target +
+                ", itemDefinition=" + itemDefinition +
+                ", spec=" + spec +
+                ", holder=" + holder +
+                '}';
+    }
+
     /**
      * Create a TriggerContext that will delay calculation of the target until after at least one
      * trigger is confirmed in the item matching process

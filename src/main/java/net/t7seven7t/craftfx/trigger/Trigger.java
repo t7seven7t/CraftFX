@@ -1,19 +1,12 @@
 package net.t7seven7t.craftfx.trigger;
 
-import com.google.common.collect.MapMaker;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-
 import net.t7seven7t.craftfx.data.ConfigDataHolder;
 import net.t7seven7t.craftfx.effect.Effect;
 import net.t7seven7t.craftfx.effect.EffectContext;
-import net.t7seven7t.craftfx.effect.EffectLoader;
 import net.t7seven7t.craftfx.item.ItemDefinition;
 
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,19 +23,24 @@ public final class Trigger extends ConfigDataHolder {
      */
     private final List<Effect> effectList;
     /**
-     * A multimap of all effect context instances being managed by this trigger.
+     * Whether this trigger should only cancel ongoing effects
      */
-    private final Multimap<Player, EffectContext> playerEffectMultimap = Multimaps.newListMultimap(
-            new MapMaker().weakKeys().makeMap(), ArrayList::new);
+    private final boolean canceller;
 
-    public Trigger(ItemDefinition itemDefinition, ConfigurationSection config) throws Exception {
+    Trigger(ItemDefinition itemDefinition, ConfigurationSection config, List<Effect> effectList,
+            boolean canceller) {
         super(config);
         this.itemDefinition = itemDefinition;
-        this.effectList = new EffectLoader().loadEffects(config);
+        this.effectList = effectList;
+        this.canceller = canceller;
     }
 
     public ItemDefinition getItemDefinition() {
         return itemDefinition;
+    }
+
+    public boolean isCanceller() {
+        return canceller;
     }
 
     /**
@@ -54,12 +52,9 @@ public final class Trigger extends ConfigDataHolder {
         // run all effects for initiator:
         // todo: get targeting params
         for (Effect effect : effectList) {
-            // effect context will store any state
             final EffectContext effectContext = new EffectContext(context.getInitiator(),
-                    context.getItemDefinition(), context.getSpec());
+                    context.getItemDefinition(), context.getSpec(), this);
             effect.run(effectContext);
-            // todo: store context in the multimap for callbacks or runnable
-            // playerEffectMultimap.put(context.getInitiator(), effectContext);
         }
     }
 

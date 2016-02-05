@@ -26,6 +26,6 @@ public class MoveData extends AbstractData {
 
     @Override
     public Data getCopy() {
-        return new MoveData(minMoveDist);
+        return new MoveData(minMoveDistDef);
     }
 }

@@ -42,6 +42,9 @@ public final class Effect extends ConfigDataHolder {
             // remove old context
             context.copyState(oldContext);
             removeContext(context.getInitiator());
+        } else if (context.getTrigger().isCanceller()) {
+            // beyond here we are only creating new state and not ending any
+            return;
         } else {
             final ExtentData data = getData(ExtentData.class).get();
             state = data.isInverted() ? ExtentState.END : ExtentState.START;

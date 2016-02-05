@@ -6,6 +6,7 @@ import net.t7seven7t.craftfx.data.trigger.MoveData;
 import net.t7seven7t.craftfx.data.trigger.SlotData;
 
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
@@ -16,6 +17,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 /**
  *
@@ -63,13 +65,13 @@ public class TriggerRegistry {
                 }).build());
         register(TriggerSpec.builder()
                 .aliases("death")
+                .data(new SlotData("all"))
                 .listener(EntityDeathEvent.class, e -> e instanceof PlayerDeathEvent
                         ? new TriggerContext((Player) e.getEntity()) : null)
                 .build());
         register(TriggerSpec.builder()
                 .aliases("move")
                 .data(new MoveData(0))
-                .data(new SlotData("hand")) // might be a little intensive otherwise
                 .listener(PlayerMoveEvent.class, e -> new TriggerContext(e.getPlayer(), e.getTo()))
                 .filter(c -> {
                     final MoveData data = c.getData(MoveData.class).get();
@@ -77,18 +79,27 @@ public class TriggerRegistry {
                     return dist <= 0 || dist < c.getInitiator().getLocation()
                             .distance(c.getTarget().getLocation().get());
                 }).build());
+        final Predicate<TriggerContext> holdFilter = c -> {
+            final HoldData data = c.getData(HoldData.class).get();
+            final Optional<ItemStack> opt = c.getTarget().as(ItemStack.class);
+            return opt.isPresent() && data.getMinimumStackSize() <= opt.get().getAmount()
+                    && data.getMaximumStackSize() >= opt.get().getAmount();
+        };
         register(TriggerSpec.builder()
                 .aliases("hold item", "hold")
-                .data(new HoldData(Integer.MIN_VALUE, Integer.MAX_VALUE))
-                .data(new SlotData("hand"))
-                .listener(PlayerItemHeldEvent.class, e -> new TriggerContext(e.getPlayer(), e1 ->
+                .data(new HoldData(0, 64))
+                .listener(PlayerItemHeldEvent.class, e -> new TriggerContext(e.getPlayer(),
                         e.getPlayer().getInventory().getItem(e.getNewSlot())))
-                .filter(c -> {
-                    final HoldData data = c.getData(HoldData.class).get();
-                    final Optional<ItemStack> opt = c.getTarget().as(ItemStack.class);
-                    return opt.isPresent() && data.getMinimumStackSize() < opt.get().getAmount()
-                            && data.getMaximumStackSize() > opt.get().getAmount();
-                }).build());
+                .filter(holdFilter)
+                .build());
+        register(TriggerSpec.builder()
+                .aliases("unhold item", "unhold")
+                .data(new HoldData(0, 64))
+                .listener(PlayerItemHeldEvent.class, e -> new TriggerContext(e.getPlayer(),
+                                e.getPlayer().getInventory().getItem(e.getPreviousSlot())),
+                        EventPriority.LOW) // low priority executed before normal
+                .filter(holdFilter)
+                .build());
     }
 
 }

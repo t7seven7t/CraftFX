@@ -34,6 +34,6 @@ public class HoldData extends AbstractData {
 
     @Override
     public Data getCopy() {
-        return new HoldData(minimumStackSize, maximumStackSize);
+        return new HoldData(minimumStackSizeDef, maximumStackSizeDef);
     }
 }

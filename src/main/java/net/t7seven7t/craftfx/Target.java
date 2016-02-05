@@ -14,11 +14,17 @@ import static java.util.Optional.of;
  *
  */
 public class Target {
-
     private final Object target;
 
     public Target(Object target) {
         this.target = target;
+    }
+
+    @Override
+    public String toString() {
+        return "Target{" +
+                "target=" + target +
+                '}';
     }
 
     public Optional<Player> getPlayer() {
@@ -42,7 +48,7 @@ public class Target {
     }
 
     public <T> Optional<T> as(Class<T> clazz) {
-        return clazz.isInstance(target) ? of((T) target) : empty();
+        return clazz.isInstance(target) ? of(clazz.cast(target)) : empty();
     }
 
 }

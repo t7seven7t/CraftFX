@@ -13,7 +13,6 @@ import org.bukkit.event.Event;
 import org.bukkit.event.EventException;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.EventExecutor;
 
@@ -38,7 +37,7 @@ public final class TriggerSpec {
 
     private TriggerSpec() {
         defaultData.add(new ConfigData());
-        defaultData.add(new SlotData("all"));
+        defaultData.add(new SlotData("hand"));
         // todo: add default filters like level/xp based, etc & make defaults configurable
     }
 
@@ -55,14 +54,18 @@ public final class TriggerSpec {
         // Check all inventory slots specified by SlotData
         // If any matching run them
         final ItemStack[] contents = context.getInitiator().getInventory().getContents();
-        final int heldSlot = event instanceof PlayerItemHeldEvent ? ((PlayerItemHeldEvent) event)
-                .getNewSlot() : context.getInitiator().getInventory().getHeldItemSlot();
+        // special use case for where context target is an ItemStack::
+        final Optional<ItemStack> optItem = context.getTarget().as(ItemStack.class);
+        final int heldSlot = context.getInitiator().getInventory().getHeldItemSlot();
         for (Trigger t : triggers) {
-            if (!isItemCorrect(t, contents, heldSlot)) continue;
-            final Optional<Function> funcOpt = context.getTarget().as(Function.class);
-            if (funcOpt.isPresent()) {
+            if (optItem.isPresent()) {
+                // special use for contexts that have a ItemStack target
+                if (!t.getItemDefinition().isSimilar(optItem.get())) continue;
+            } else if (!isItemCorrect(t, contents, heldSlot)) continue;
+            final Optional<Function> optFunc = context.getTarget().as(Function.class);
+            if (optFunc.isPresent()) {
                 // unsafe call if someone uses other functions as target
-                context = context.copy(funcOpt.get().apply(event));
+                context = context.copy(optFunc.get().apply(event));
             }
             final TriggerContext copy = context.copy();
             t.fill(copy);
@@ -76,6 +79,7 @@ public final class TriggerSpec {
         final ItemDefinition item = trigger.getItemDefinition();
         if (slotData.isHandSlot() && item.isSimilar(contents[heldSlot])) return true;
         for (int slot : slotData.getSlots()) {
+            if (slot >= contents.length) continue;
             if (item.isSimilar(contents[slot])) return true;
         }
         return false;
@@ -119,8 +123,14 @@ public final class TriggerSpec {
 
         public <T extends Event> Builder listener(Class<T> eventClazz,
                                                   Function<T, TriggerContext> function) {
+            return listener(eventClazz, function, EventPriority.NORMAL);
+        }
+
+        public <T extends Event> Builder listener(Class<T> eventClazz,
+                                                  Function<T, TriggerContext> function,
+                                                  EventPriority priority) {
             Bukkit.getPluginManager().registerEvent(eventClazz, spec.listener,
-                    EventPriority.NORMAL, new TriggerExecutor<>(spec, function), CraftFX.plugin());
+                    priority, new TriggerExecutor<>(spec, function), CraftFX.plugin());
             return Builder.this;
         }
 
