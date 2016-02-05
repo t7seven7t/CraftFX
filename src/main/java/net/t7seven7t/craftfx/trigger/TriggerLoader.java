@@ -50,9 +50,9 @@ public class TriggerLoader {
      */
     private Trigger loadTrigger(String type, ItemDefinition item,
                                 ConfigurationSection config) throws Exception {
-        Optional<TriggerSpec> opt = CraftFX.instance().getTriggerRegistry().getSpec(type);
+        final Optional<TriggerSpec> opt = CraftFX.instance().getTriggerRegistry().getSpec(type);
         if (!opt.isPresent()) throw new Exception("Trigger type '" + type + "' isn't registered.");
-        Trigger trigger = new Trigger(item, config);
+        final Trigger trigger = new Trigger(item, config);
         opt.get().addTrigger(trigger);
         return trigger;
     }

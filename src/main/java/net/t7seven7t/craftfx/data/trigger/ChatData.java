@@ -10,8 +10,15 @@ import java.util.Optional;
  */
 public class ChatData extends AbstractData {
 
+    private Optional<String> pattern;
+
     public Optional<String> getPattern() {
-        return get("pattern", String.class);
+        return pattern;
+    }
+
+    @Override
+    public void onDataHolderUpdate() {
+        this.pattern = get("pattern", String.class);
     }
 
     @Override

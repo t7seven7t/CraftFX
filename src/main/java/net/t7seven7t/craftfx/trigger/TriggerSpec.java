@@ -1,5 +1,7 @@
 package net.t7seven7t.craftfx.trigger;
 
+import com.google.common.collect.ImmutableList;
+
 import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.data.ConfigData;
 import net.t7seven7t.craftfx.data.Data;
@@ -16,6 +18,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.EventExecutor;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -33,7 +36,7 @@ public final class TriggerSpec {
     private final Listener listener = new Listener() {
     };
 
-    public TriggerSpec() {
+    private TriggerSpec() {
         defaultData.add(new ConfigData());
         defaultData.add(new SlotData("all"));
         // todo: add default filters like level/xp based, etc & make defaults configurable
@@ -44,7 +47,7 @@ public final class TriggerSpec {
     }
 
     public List<String> getAliases() {
-        return aliases;
+        return ImmutableList.copyOf(aliases);
     }
 
     private void run(TriggerContext context, Event event) {
@@ -105,6 +108,11 @@ public final class TriggerSpec {
         }
 
         public Builder data(Data data) {
+            Iterator<Data> it = spec.defaultData.iterator();
+            Class<?> clazz = data.getClass();
+            while (it.hasNext()) {
+                if (it.next().getClass() == clazz) it.remove();
+            }
             spec.defaultData.add(data);
             return Builder.this;
         }

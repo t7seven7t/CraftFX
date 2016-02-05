@@ -1,5 +1,6 @@
 package net.t7seven7t.craftfx;
 
+import net.t7seven7t.craftfx.effect.EffectRegistry;
 import net.t7seven7t.craftfx.item.ItemLoader;
 import net.t7seven7t.craftfx.item.ItemRegistry;
 import net.t7seven7t.craftfx.listener.PlayerListener;
@@ -27,6 +28,7 @@ public class CraftFX {
     private final CraftFXPlugin plugin;
     private final ItemRegistry itemRegistry;
     private final TriggerRegistry triggerRegistry;
+    private final EffectRegistry effectRegistry;
     private final NMSInterface nmsInterface;
 
     CraftFX(CraftFXPlugin plugin) {
@@ -47,6 +49,7 @@ public class CraftFX {
 
         itemRegistry = new ItemRegistry();
         triggerRegistry = new TriggerRegistry();
+        effectRegistry = new EffectRegistry();
         ItemLoader itemLoader = new ItemLoader();
         itemLoader.loadItems();
 
@@ -94,6 +97,10 @@ public class CraftFX {
     public FileConfiguration getMessages(Locale locale) {
         // todo: add locale support?
         return ConfigType.MESSAGES.get();
+    }
+
+    public EffectRegistry getEffectRegistry() {
+        return effectRegistry;
     }
 
     public TriggerRegistry getTriggerRegistry() {

@@ -95,9 +95,8 @@ public class SlotData extends AbstractData {
     }
 
     @Override
-    public void setHolder(DataHolder holder) {
-        super.setHolder(holder);
-        if (holder == null) return;
+    public void onDataHolderUpdate() {
+        final DataHolder holder = getHolder().get();
         if (holder instanceof ConfigDataHolder) {
             final ConfigDataHolder h = (ConfigDataHolder) holder;
             if (h.getConfig().isList("slots")) {

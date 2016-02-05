@@ -18,9 +18,14 @@ public abstract class AbstractData implements Data {
         return get(propertyName, clazz).orElse(def);
     }
 
+    public Optional<DataHolder> getHolder() {
+        return holder;
+    }
+
     @Override
-    public void setHolder(DataHolder holder) {
+    public final void setHolder(DataHolder holder) {
         this.holder = Optional.ofNullable(holder);
+        if (holder != null) onDataHolderUpdate();
     }
 
     @Override
@@ -28,6 +33,13 @@ public abstract class AbstractData implements Data {
         Data data = getCopy();
         data.setHolder(holder.orElse(null));
         return data;
+    }
+
+    /**
+     * Called when the setDataHolder is called with a holder that is non null so that child
+     * instances have a chance to reinitialize their internal state.
+     */
+    public void onDataHolderUpdate() {
     }
 
     public abstract Data getCopy();

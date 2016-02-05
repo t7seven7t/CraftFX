@@ -8,14 +8,20 @@ import net.t7seven7t.craftfx.data.Data;
  */
 public class MoveData extends AbstractData {
 
-    private final double minMoveDist;
+    private final double minMoveDistDef;
+    private double minMoveDist;
 
-    public MoveData(double minMoveDist) {
-        this.minMoveDist = minMoveDist;
+    public MoveData(double minMoveDistDef) {
+        this.minMoveDistDef = minMoveDistDef;
     }
 
     public double getMinMoveDist() {
-        return get("min-move-distance", Double.class, minMoveDist);
+        return minMoveDist;
+    }
+
+    @Override
+    public void onDataHolderUpdate() {
+        minMoveDist = get("min-move-distance", Double.class, minMoveDistDef);
     }
 
     @Override
