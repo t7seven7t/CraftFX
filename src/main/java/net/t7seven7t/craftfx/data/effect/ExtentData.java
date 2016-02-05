@@ -13,7 +13,22 @@ import java.util.Optional;
 public class ExtentData extends AbstractData {
 
     private Optional<ExtentState> disabled;
+    private ExtentState disabledDef;
     private boolean inverted;
+    private boolean invertedDef;
+
+    public ExtentData() {
+        disabledDef = ExtentState.END;
+    }
+
+    public ExtentData(ExtentState disabledDef) {
+        this.disabledDef = disabledDef;
+    }
+
+    public ExtentData(ExtentState disabledDef, boolean invertedDef) {
+        this.disabledDef = disabledDef;
+        this.invertedDef = invertedDef;
+    }
 
     public Optional<ExtentState> getDisabledExtent() {
         return disabled;
@@ -30,8 +45,8 @@ public class ExtentData extends AbstractData {
     @Override
     public void onDataHolderUpdate() {
         disabled = Optional.ofNullable(EnumUtil.matchEnumValue(ExtentState.class,
-                get("disable-extent", String.class, "")));
-        inverted = get("invert-extents", Boolean.class, false);
+                get("disable-extent", String.class, disabledDef.name())));
+        inverted = get("invert-extents", Boolean.class, invertedDef);
     }
 
     @Override

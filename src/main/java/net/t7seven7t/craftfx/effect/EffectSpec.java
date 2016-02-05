@@ -8,7 +8,7 @@ import net.t7seven7t.craftfx.data.effect.ExtentData;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +21,7 @@ public final class EffectSpec {
 
     private final List<String> aliases = new ArrayList<>();
     private final List<Data> defaultData = new ArrayList<>();
-    private final Map<ExtentState, Consumer<EffectContext>> consumerMap = new HashMap<>();
+    private final Map<ExtentState, Consumer<EffectContext>> consumerMap = new IdentityHashMap<>(2);
 
     private EffectSpec() {
         defaultData.add(new ExtentData());
@@ -70,11 +70,23 @@ public final class EffectSpec {
          * state. Additional will overwrite previous.
          *
          * @param state    state to run the effect at
-         * @param consumer the code that runs the effect
+         * @param consumer the method that runs the effect
          * @return the same builder object
          */
         public Builder effect(ExtentState state, Consumer<EffectContext> consumer) {
             spec.consumerMap.put(state, consumer);
+            return Builder.this;
+        }
+
+        /**
+         * Fills all extent states with the consumer to run.
+         *
+         * @param consumer the method that runs the effect
+         * @return the same builder object
+         */
+        public Builder effect(Consumer<EffectContext> consumer) {
+            spec.consumerMap.put(ExtentState.START, consumer);
+            spec.consumerMap.put(ExtentState.END, consumer);
             return Builder.this;
         }
 
