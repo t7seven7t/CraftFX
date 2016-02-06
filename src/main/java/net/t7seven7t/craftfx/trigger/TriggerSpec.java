@@ -122,15 +122,22 @@ public final class TriggerSpec {
         }
 
         public <T extends Event> Builder listener(Class<T> eventClazz,
+                                                  Function<T, TriggerContext> function,
+                                                  EventPriority priority) {
+            return listener(eventClazz, function, priority, true);
+        }
+
+        public <T extends Event> Builder listener(Class<T> eventClazz,
                                                   Function<T, TriggerContext> function) {
             return listener(eventClazz, function, EventPriority.NORMAL);
         }
 
         public <T extends Event> Builder listener(Class<T> eventClazz,
                                                   Function<T, TriggerContext> function,
-                                                  EventPriority priority) {
+                                                  EventPriority priority, boolean ignoreCancelled) {
             Bukkit.getPluginManager().registerEvent(eventClazz, spec.listener,
-                    priority, new TriggerExecutor<>(spec, function), CraftFX.plugin());
+                    priority, new TriggerExecutor<>(spec, function), CraftFX.plugin(),
+                    ignoreCancelled);
             return Builder.this;
         }
 

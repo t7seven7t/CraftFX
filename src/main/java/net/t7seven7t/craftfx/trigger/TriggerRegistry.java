@@ -9,14 +9,17 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
@@ -52,6 +55,8 @@ public class TriggerRegistry {
     }
 
     private void initDefaults() {
+        final Function<PlayerJoinEvent, TriggerContext> playerJoinFunction = e ->
+                new TriggerContext(e.getPlayer());
         register(TriggerSpec.builder()
                 .aliases("chat")
                 .data(new ChatData())
@@ -90,6 +95,14 @@ public class TriggerRegistry {
                 .data(new HoldData(0, 64))
                 .listener(PlayerItemHeldEvent.class, e -> new TriggerContext(e.getPlayer(),
                         e.getPlayer().getInventory().getItem(e.getNewSlot())))
+                .listener(InventoryClickEvent.class, e -> {
+                    if (e.getWhoClicked() instanceof Player
+                            && e.getSlot() == e.getWhoClicked().getInventory().getHeldItemSlot()) {
+                        return new TriggerContext((Player) e.getWhoClicked(), e.getCursor());
+                    }
+                    return null;
+                })
+                .listener(PlayerJoinEvent.class, playerJoinFunction)
                 .filter(holdFilter)
                 .build());
         register(TriggerSpec.builder()
@@ -98,6 +111,14 @@ public class TriggerRegistry {
                 .listener(PlayerItemHeldEvent.class, e -> new TriggerContext(e.getPlayer(),
                                 e.getPlayer().getInventory().getItem(e.getPreviousSlot())),
                         EventPriority.LOW) // low priority executed before normal
+                .listener(InventoryClickEvent.class, e -> {
+                    if (e.getWhoClicked() instanceof Player
+                            && e.getSlot() == e.getWhoClicked().getInventory().getHeldItemSlot()) {
+                        return new TriggerContext((Player) e.getWhoClicked(), e.getCurrentItem());
+                    }
+                    return null;
+                })
+                .listener(PlayerJoinEvent.class, playerJoinFunction)
                 .filter(holdFilter)
                 .build());
     }
