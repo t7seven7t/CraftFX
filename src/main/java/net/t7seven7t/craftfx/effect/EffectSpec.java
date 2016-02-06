@@ -3,7 +3,9 @@ package net.t7seven7t.craftfx.effect;
 import com.google.common.collect.ImmutableList;
 
 import net.t7seven7t.craftfx.data.Data;
+import net.t7seven7t.craftfx.data.effect.DelayData;
 import net.t7seven7t.craftfx.data.effect.ExtentData;
+import net.t7seven7t.craftfx.data.effect.TimerData;
 
 import org.bukkit.configuration.ConfigurationSection;
 
@@ -25,6 +27,8 @@ public final class EffectSpec {
 
     private EffectSpec() {
         defaultData.add(new ExtentData());
+        defaultData.add(new DelayData(0));
+        defaultData.add(new TimerData());
     }
 
     public static Builder builder() {
