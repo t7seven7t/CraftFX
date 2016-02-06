@@ -5,24 +5,22 @@ import net.t7seven7t.craftfx.data.Data;
 import net.t7seven7t.craftfx.effect.ExtentState;
 import net.t7seven7t.util.EnumUtil;
 
-import java.util.Optional;
-
 /**
  *
  */
 public class ExtentData extends AbstractData {
 
-    private Optional<ExtentState> disabled;
-    private ExtentState disabledDef;
+    private final ExtentState disabledDef;
+    private final boolean invertedDef;
+    private ExtentState disabled;
     private boolean inverted;
-    private boolean invertedDef;
 
     public ExtentData() {
-        disabledDef = ExtentState.END;
+        this(ExtentState.END);
     }
 
     public ExtentData(ExtentState disabledDef) {
-        this.disabledDef = disabledDef;
+        this(disabledDef, false);
     }
 
     public ExtentData(ExtentState disabledDef, boolean invertedDef) {
@@ -30,12 +28,8 @@ public class ExtentData extends AbstractData {
         this.invertedDef = invertedDef;
     }
 
-    public Optional<ExtentState> getDisabledExtent() {
-        return disabled;
-    }
-
     public boolean isExtentDisabled(ExtentState state) {
-        return disabled.orElse(null) == state;
+        return disabled != null && disabled == state;
     }
 
     public boolean isInverted() {
@@ -44,8 +38,9 @@ public class ExtentData extends AbstractData {
 
     @Override
     public void onDataHolderUpdate() {
-        disabled = Optional.ofNullable(EnumUtil.matchEnumValue(ExtentState.class,
-                get("disable-extent", String.class, disabledDef.name())));
+        disabled = EnumUtil.matchEnumValue(ExtentState.class,
+                get("disable-extent", String.class, ""));
+        if (disabled == null) disabled = disabledDef;
         inverted = get("invert-extents", Boolean.class, invertedDef);
     }
 

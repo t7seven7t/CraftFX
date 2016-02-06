@@ -2,6 +2,7 @@ package net.t7seven7t.craftfx.effect;
 
 import com.google.common.collect.ImmutableList;
 
+import net.t7seven7t.craftfx.data.ConfigData;
 import net.t7seven7t.craftfx.data.Data;
 import net.t7seven7t.craftfx.data.effect.DelayData;
 import net.t7seven7t.craftfx.data.effect.ExtentData;
@@ -26,6 +27,7 @@ public final class EffectSpec {
     private final Map<ExtentState, Consumer<EffectContext>> consumerMap = new IdentityHashMap<>(2);
 
     private EffectSpec() {
+        defaultData.add(new ConfigData());
         defaultData.add(new ExtentData());
         defaultData.add(new DelayData(0));
         defaultData.add(new TimerData());

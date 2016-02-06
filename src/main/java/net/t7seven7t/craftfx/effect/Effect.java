@@ -40,27 +40,29 @@ public final class Effect extends ConfigDataHolder {
      * @param context context
      */
     public void run(EffectContext context) {
+        context.holder = this;
         final EffectContext oldContext = getLastContext(context.getInitiator());
         ExtentState state;
         if (oldContext != null) {
-            state = oldContext.getProperty("extent-state", ExtentState.class).orElse(null);
+            state = oldContext.getProperty("extent-state", ExtentState.class)
+                    .map(ExtentState::other).orElse(null);
             // remove old context
             context.copyState(oldContext);
             removeContext(context.getInitiator());
-        } else if (context.getTrigger().isCanceller()) {
-            // beyond here we are only creating new state and not ending any
-            return;
         } else {
             final ExtentData data = getData(ExtentData.class).get();
             state = data.isInverted() ? ExtentState.END : ExtentState.START;
             if (data.isExtentDisabled(state)) {
                 state = state.other();
             } else if (!data.isExtentDisabled(state.other())) {
+                if (context.getTrigger().isCanceller()) {
+                    // cancellers don't want to create new state
+                    return;
+                }
                 addContext(context.getInitiator(), context);
                 context.setProperty("extent-state", state);
             }
         }
-
         // run the effect for the retrieved state
         final Consumer<EffectContext> consumer = consumerMap.get(state);
         if (consumer == null) return;
