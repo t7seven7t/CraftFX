@@ -17,7 +17,11 @@ public class Target {
     private final Object target;
 
     public Target(Object target) {
-        this.target = target;
+        if (target instanceof Target) {
+            this.target = ((Target) target).target;
+        } else {
+            this.target = target;
+        }
     }
 
     @Override

@@ -1,13 +1,17 @@
 package net.t7seven7t.craftfx;
 
 import net.t7seven7t.craftfx.effect.EffectRegistry;
+import net.t7seven7t.craftfx.effect.EffectSpec;
 import net.t7seven7t.craftfx.item.ItemLoader;
 import net.t7seven7t.craftfx.item.ItemRegistry;
 import net.t7seven7t.craftfx.listener.PlayerListener;
 import net.t7seven7t.craftfx.listener.RecipeListener;
 import net.t7seven7t.craftfx.nms.FallbackNMSAdapter;
 import net.t7seven7t.craftfx.nms.NMSInterface;
+import net.t7seven7t.craftfx.target.TargetSelectorRegistry;
+import net.t7seven7t.craftfx.target.TargetSelectorSpec;
 import net.t7seven7t.craftfx.trigger.TriggerRegistry;
+import net.t7seven7t.craftfx.trigger.TriggerSpec;
 import net.t7seven7t.craftfx.util.LogHelper;
 
 import org.bukkit.Bukkit;
@@ -27,8 +31,9 @@ public class CraftFX {
     private final LogHelper logHelper = new LogHelper();
     private final CraftFXPlugin plugin;
     private final ItemRegistry itemRegistry;
-    private final TriggerRegistry triggerRegistry;
-    private final EffectRegistry effectRegistry;
+    private final Registry<TriggerSpec> triggerRegistry;
+    private final Registry<EffectSpec> effectRegistry;
+    private final Registry<TargetSelectorSpec> targetSelectorRegistry;
     private final NMSInterface nmsInterface;
 
     CraftFX(CraftFXPlugin plugin) {
@@ -50,6 +55,7 @@ public class CraftFX {
         itemRegistry = new ItemRegistry();
         triggerRegistry = new TriggerRegistry();
         effectRegistry = new EffectRegistry();
+        targetSelectorRegistry = new TargetSelectorRegistry();
         ItemLoader itemLoader = new ItemLoader();
         itemLoader.loadItems();
 
@@ -99,11 +105,15 @@ public class CraftFX {
         return ConfigType.MESSAGES.get();
     }
 
-    public EffectRegistry getEffectRegistry() {
+    public Registry<TargetSelectorSpec> getTargetSelectorRegistry() {
+        return targetSelectorRegistry;
+    }
+
+    public Registry<EffectSpec> getEffectRegistry() {
         return effectRegistry;
     }
 
-    public TriggerRegistry getTriggerRegistry() {
+    public Registry<TriggerSpec> getTriggerRegistry() {
         return triggerRegistry;
     }
 

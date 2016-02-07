@@ -1,5 +1,6 @@
 package net.t7seven7t.craftfx.effect;
 
+import net.t7seven7t.craftfx.Registry;
 import net.t7seven7t.craftfx.data.ConfigData;
 import net.t7seven7t.craftfx.data.effect.ExtentData;
 import net.t7seven7t.craftfx.data.effect.SpeedData;
@@ -15,7 +16,7 @@ import static net.t7seven7t.craftfx.effect.ExtentState.START;
 /**
  *
  */
-public class EffectRegistry {
+public class EffectRegistry implements Registry<EffectSpec> {
 
     /**
      * List of all effect specs
@@ -26,6 +27,7 @@ public class EffectRegistry {
         initDefaults();
     }
 
+    @Override
     public void register(EffectSpec spec) {
         for (String alias : spec.getAliases()) {
             if (getSpec(alias).isPresent()) {
@@ -36,6 +38,7 @@ public class EffectRegistry {
         effectSpecList.add(spec);
     }
 
+    @Override
     public Optional<EffectSpec> getSpec(String alias) {
         alias = alias.toLowerCase();
         for (EffectSpec spec : effectSpecList) {
@@ -47,32 +50,37 @@ public class EffectRegistry {
     private void initDefaults() {
         register(EffectSpec.builder()
                 .aliases("debug")
-                .effect(c -> MessageUtil.message(c.getInitiator(),
-                        "Triggered %s!", c.getTriggerSpec()))
+                .effect(c -> {
+                    MessageUtil.message(c.getInitiator(),
+                            "Triggered %s!", c.getTriggerSpec());
+                    c.forTargets(t -> MessageUtil.message(c.getInitiator(), "  - %s", t));
+                })
                 .build());
         register(EffectSpec.builder()
                 .aliases("fly")
                 .data(new SpeedData())
                 .data(new ExtentData(null))
                 .effect(START, c -> {
-                    // todo: make these rely on target selection
-                    c.getInitiator().setAllowFlight(true);
-                    c.getInitiator().setVelocity(c.getInitiator().getVelocity().setY(1f));
-                    c.getInitiator().setFlySpeed(c.getData(SpeedData.class).get().getSpeed());
-                    c.run(() -> {
-                        if (c.getInitiator().getAllowFlight()) c.getInitiator().setFlying(true);
-                    });
-                }).effect(END, c -> {
-                    c.getInitiator().setAllowFlight(false);
-                    c.getInitiator().setFlying(false);
-                }).build());
+                    final SpeedData speedData = c.getData(SpeedData.class).get();
+                    c.forTargets(t -> t.getPlayer().ifPresent(p -> {
+                        p.setAllowFlight(true);
+                        p.setVelocity(p.getVelocity().setY(1f));
+                        p.setFlySpeed(speedData.getSpeed());
+                        c.run(() -> {
+                            if (p.getAllowFlight()) p.setFlying(true);
+                        });
+                    }));
+                }).effect(END, c -> c.forTargets(t -> t.getPlayer().ifPresent(p -> {
+                    p.setAllowFlight(false);
+                    p.setFlying(false);
+                }))).build());
         register(EffectSpec.builder()
                 .aliases("message", "msg")
                 .effect(c -> {
-                    // todo: make this rely on target selection
-                    Optional<String> message = c.getData(ConfigData.class).get()
+                    final Optional<String> message = c.getData(ConfigData.class).get()
                             .get("message", String.class);
-                    message.ifPresent(m -> MessageUtil.message(c.getInitiator(), m));
+                    message.ifPresent(m -> c.forTargets(
+                            t -> t.getPlayer().ifPresent(p -> MessageUtil.message(p, m))));
                 }).build());
     }
 

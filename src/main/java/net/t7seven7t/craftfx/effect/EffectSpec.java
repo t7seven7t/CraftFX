@@ -6,6 +6,7 @@ import net.t7seven7t.craftfx.data.ConfigData;
 import net.t7seven7t.craftfx.data.Data;
 import net.t7seven7t.craftfx.data.effect.DelayData;
 import net.t7seven7t.craftfx.data.effect.ExtentData;
+import net.t7seven7t.craftfx.data.effect.TargetSelectorData;
 import net.t7seven7t.craftfx.data.effect.TimerData;
 
 import org.bukkit.configuration.ConfigurationSection;
@@ -22,15 +23,25 @@ import java.util.function.Consumer;
  */
 public final class EffectSpec {
 
+    private static final List<Data> DEFAULT_DATA = new ArrayList<>();
+
+    static {
+        DEFAULT_DATA.add(new ConfigData());
+        DEFAULT_DATA.add(new ExtentData());
+        DEFAULT_DATA.add(new DelayData(0));
+        DEFAULT_DATA.add(new TimerData());
+        DEFAULT_DATA.add(new TargetSelectorData("self", 1));
+    }
+
     private final List<String> aliases = new ArrayList<>();
-    private final List<Data> defaultData = new ArrayList<>();
+    private final List<Data> dataList = new ArrayList<>();
     private final Map<ExtentState, Consumer<EffectContext>> consumerMap = new IdentityHashMap<>(2);
 
     private EffectSpec() {
-        defaultData.add(new ConfigData());
-        defaultData.add(new ExtentData());
-        defaultData.add(new DelayData(0));
-        defaultData.add(new TimerData());
+    }
+
+    public static void addDefaultData(Data data) {
+        DEFAULT_DATA.add(data);
     }
 
     public static Builder builder() {
@@ -39,7 +50,8 @@ public final class EffectSpec {
 
     public Effect newEffect(ConfigurationSection config) {
         final Effect effect = new Effect(config, consumerMap);
-        defaultData.forEach(d -> effect.offer(d.copy()));
+        DEFAULT_DATA.forEach(d -> effect.offer(d.copy()));
+        dataList.forEach(d -> effect.offer(d.copy()));
         return effect;
     }
 
@@ -62,12 +74,12 @@ public final class EffectSpec {
         }
 
         public Builder data(Data data) {
-            Iterator<Data> it = spec.defaultData.iterator();
+            Iterator<Data> it = spec.dataList.iterator();
             Class<?> clazz = data.getClass();
             while (it.hasNext()) {
                 if (it.next().getClass() == clazz) it.remove();
             }
-            spec.defaultData.add(data);
+            spec.dataList.add(data);
             return Builder.this;
         }
 

@@ -1,5 +1,6 @@
 package net.t7seven7t.craftfx.trigger;
 
+import net.t7seven7t.craftfx.Registry;
 import net.t7seven7t.craftfx.data.trigger.ChatData;
 import net.t7seven7t.craftfx.data.trigger.HoldData;
 import net.t7seven7t.craftfx.data.trigger.MoveData;
@@ -25,7 +26,7 @@ import java.util.function.Predicate;
 /**
  *
  */
-public class TriggerRegistry {
+public class TriggerRegistry implements Registry<TriggerSpec> {
 
     /**
      * List of all trigger specs
@@ -36,6 +37,7 @@ public class TriggerRegistry {
         initDefaults();
     }
 
+    @Override
     public void register(TriggerSpec spec) {
         for (String alias : spec.getAliases()) {
             if (getSpec(alias).isPresent()) {
@@ -46,6 +48,7 @@ public class TriggerRegistry {
         triggerSpecList.add(spec);
     }
 
+    @Override
     public Optional<TriggerSpec> getSpec(String alias) {
         alias = alias.toLowerCase();
         for (TriggerSpec spec : triggerSpecList) {

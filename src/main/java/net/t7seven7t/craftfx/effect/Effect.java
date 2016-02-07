@@ -7,6 +7,7 @@ import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.data.ConfigDataHolder;
 import net.t7seven7t.craftfx.data.effect.DelayData;
 import net.t7seven7t.craftfx.data.effect.ExtentData;
+import net.t7seven7t.craftfx.data.effect.TargetSelectorData;
 import net.t7seven7t.craftfx.data.effect.TimerData;
 
 import org.bukkit.Bukkit;
@@ -40,7 +41,6 @@ public final class Effect extends ConfigDataHolder {
      * @param context context
      */
     public void run(EffectContext context) {
-        context.holder = this;
         final EffectContext oldContext = getLastContext(context.getInitiator());
         ExtentState state;
         if (oldContext != null) {
@@ -66,6 +66,10 @@ public final class Effect extends ConfigDataHolder {
         // run the effect for the retrieved state
         final Consumer<EffectContext> consumer = consumerMap.get(state);
         if (consumer == null) return;
+        final TargetSelectorData selectorData = getData(TargetSelectorData.class).get();
+        context.selector = CraftFX.instance().getTargetSelectorRegistry()
+                .getSpec(selectorData.getMode()).get()
+                .newTargetSelector(context.getOrigin(), context.getInitiator(), this);
         final TimerData timerData = getData(TimerData.class).get();
         final long delay = getData(DelayData.class).get().getDelayTicks();
         if (timerData.getIterations() > 1) {
@@ -85,6 +89,13 @@ public final class Effect extends ConfigDataHolder {
             Bukkit.getScheduler().runTaskLater(CraftFX.plugin(),
                     () -> consumer.accept(context), delay);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "Effect{"
+                + getConfig().getCurrentPath()
+                + "}";
     }
 
     private void addContext(Player player, EffectContext context) {

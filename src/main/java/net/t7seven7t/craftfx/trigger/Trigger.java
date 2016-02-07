@@ -52,8 +52,8 @@ public final class Trigger extends ConfigDataHolder {
         // run all effects for initiator:
         // todo: get targeting params
         for (Effect effect : effectList) {
-            final EffectContext effectContext = new EffectContext(context.getInitiator(),
-                    context.getItemDefinition(), context.getSpec(), this);
+            final EffectContext effectContext = new EffectContext(effect, context.getInitiator(),
+                    context.getTarget(), context.getItemDefinition(), context.getSpec(), this);
             effect.run(effectContext);
         }
     }

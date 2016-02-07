@@ -1,10 +1,11 @@
 package net.t7seven7t.craftfx.effect;
 
 import net.t7seven7t.craftfx.CraftFX;
+import net.t7seven7t.craftfx.Target;
 import net.t7seven7t.craftfx.data.Data;
-import net.t7seven7t.craftfx.data.DataHolder;
 import net.t7seven7t.craftfx.data.DataInterface;
 import net.t7seven7t.craftfx.item.ItemDefinition;
+import net.t7seven7t.craftfx.target.TargetSelector;
 import net.t7seven7t.craftfx.trigger.Trigger;
 import net.t7seven7t.craftfx.trigger.TriggerSpec;
 
@@ -12,31 +13,40 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  *
  */
 public class EffectContext implements DataInterface {
     private final Player initiator;
+    private final Target origin;
     // some kind of targeting params
     private final ItemDefinition itemDefinition;
     private final TriggerSpec triggerSpec;
     private final Trigger trigger;
-    DataHolder holder;
+    private final Effect effect;
+    TargetSelector selector;
     private Map<String, Object> properties;
+
     /**
      * The instance of Effect this context is to be passed to
      */
-
-    public EffectContext(Player initiator, ItemDefinition itemDefinition,
-                         TriggerSpec triggerSpec, Trigger trigger) {
+    public EffectContext(Effect effect, Player initiator, Target origin,
+                         ItemDefinition itemDefinition, TriggerSpec triggerSpec, Trigger trigger) {
+        this.effect = effect;
+        this.origin = origin;
         this.initiator = initiator;
         this.itemDefinition = itemDefinition;
         this.triggerSpec = triggerSpec;
         this.trigger = trigger;
+    }
 
+    public Target getOrigin() {
+        return origin;
     }
 
     @Override
@@ -46,6 +56,14 @@ public class EffectContext implements DataInterface {
                 ", itemDefinition=" + itemDefinition +
                 ", triggerSpec=" + triggerSpec +
                 '}';
+    }
+
+    public TargetSelector getTargetSelector() {
+        return selector;
+    }
+
+    public List<Target> getTargets() {
+        return selector.getTargets();
     }
 
     public Trigger getTrigger() {
@@ -80,6 +98,10 @@ public class EffectContext implements DataInterface {
         return getProperty(propertyName).filter(clazz::isInstance).map(clazz::cast);
     }
 
+    public void forTargets(Consumer<Target> consumer) {
+        getTargets().forEach(consumer);
+    }
+
     /**
      * Convenience method for scheduling a task
      *
@@ -110,7 +132,7 @@ public class EffectContext implements DataInterface {
 
     @Override
     public <T extends Data> Optional<T> getData(Class<T> clazz) {
-        return holder != null ? holder.getData(clazz) : Optional.<T>empty();
+        return effect != null ? effect.getData(clazz) : Optional.<T>empty();
     }
 
 }
