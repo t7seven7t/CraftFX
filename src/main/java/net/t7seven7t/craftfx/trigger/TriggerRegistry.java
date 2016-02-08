@@ -8,6 +8,7 @@ import net.t7seven7t.craftfx.data.trigger.SlotData;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -123,6 +124,12 @@ public class TriggerRegistry implements Registry<TriggerSpec> {
                 })
                 .listener(PlayerJoinEvent.class, playerJoinFunction)
                 .filter(holdFilter)
+                .build());
+        register(TriggerSpec.builder()
+                .aliases("hit entity")
+                .listener(EntityDamageByEntityEvent.class, e -> e.getDamager() instanceof Player ?
+                                new TriggerContext((Player) e.getDamager(), e.getEntity()) : null,
+                        EventPriority.MONITOR, false)
                 .build());
     }
 
