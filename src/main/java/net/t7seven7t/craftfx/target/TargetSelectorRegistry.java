@@ -6,11 +6,14 @@ import net.t7seven7t.craftfx.Registry;
 import net.t7seven7t.craftfx.Target;
 import net.t7seven7t.craftfx.data.effect.TargetSelectorData;
 
+import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -60,7 +63,7 @@ public class TargetSelectorRegistry implements Registry<TargetSelectorSpec> {
         final TargetAdapter toEntity = c -> {
             final TargetSelectorData data = c.getData(TargetSelectorData.class).get();
             Optional<Entity> optEntity = c.getOrigin().getEntity();
-            if (!optEntity.isPresent()) {
+            if (!optEntity.isPresent() || optEntity.get() == c.getInitiator()) {
                 return ImmutableList.of();
             } else if (data.getEntityType() == null) {
                 return ImmutableList.of(c.getOrigin());
@@ -78,5 +81,24 @@ public class TargetSelectorRegistry implements Registry<TargetSelectorSpec> {
                 .aliases("entity")
                 .adapter(toEntity)
                 .build());
+        register(TargetSelectorSpec.builder()
+                .aliases("aoe-entity")
+                .adapter(c -> {
+                    // get entities around the origin
+                    final Location origin = c.getOrigin().getAsLocation().orElse(null);
+                    if (origin == null) return ImmutableList.of();
+                    final TargetSelectorData data = c.getData(TargetSelectorData.class).get();
+                    final double radius = data.getAoeRadius();
+                    return origin.getWorld().getNearbyEntities(origin, radius, radius, radius)
+                            .stream()
+                            .limit(data.getLimit())
+                            .sorted(Comparator.comparingDouble(e ->
+                                    e.getLocation().distance(origin)))
+                            .map(e -> toEntity.apply(new TargetSelectorContext(new Target(e),
+                                    c.getInitiator(), c.getDataHolder())))
+                            .filter(e -> !e.isEmpty())
+                            .map(e -> e.get(0))
+                            .collect(Collectors.toList());
+                }).build());
     }
 }

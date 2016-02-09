@@ -30,7 +30,7 @@ public final class EffectSpec {
         DEFAULT_DATA.add(new ExtentData());
         DEFAULT_DATA.add(new DelayData(0));
         DEFAULT_DATA.add(new TimerData());
-        DEFAULT_DATA.add(new TargetSelectorData("self", 1));
+        DEFAULT_DATA.add(new TargetSelectorData("self", 1, 5));
     }
 
     private final List<String> aliases = new ArrayList<>();

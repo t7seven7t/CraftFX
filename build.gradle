@@ -18,6 +18,16 @@ buildscript {
 }
 
 def adapters = new ArrayList()
+def version_pattern = Pattern.compile("(\\w+)-(v.+)")
+def versions = new ArrayList()
+for (f in file('libs').listFiles()) {
+    def m = version_pattern.matcher(f.getName())
+    if (m.find()) {
+        def version = m.group(2).replace(".jar", "")
+        versions.add(version)
+        println "Found " + version + " sources!"
+    }
+}
 
 allprojects {
     apply plugin: 'java'
@@ -31,6 +41,8 @@ allprojects {
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
 
+    configurations { spigot }
+
     repositories {
         mavenCentral()
         maven { url "https://hub.spigotmc.org/nexus/content/repositories/snapshots/" }
@@ -40,10 +52,10 @@ allprojects {
 
     dependencies {
         if (!project.name.equals("NMSAdapter")) compile project(':NMSAdapter')
-        compile group: 'org.spigotmc', name: 'spigot-api', version: '1.8.8-R0.1-SNAPSHOT'
+        spigot(group: 'org.spigotmc', name: 'spigot-api', version: '1.8.8-R0.1-SNAPSHOT')
         compile group: 'net.md-5', name: 'bungeecord-chat', version: '1.8-SNAPSHOT'
         compile group: 'com.sk89q.intake', name: 'intake', version: '4.2-SNAPSHOT'
-        compile fileTree(dir: rootProject.file('libs'), include: '*.jar')
+        compile(fileTree(dir: rootProject.file('libs'), include: '*.jar'))
         testCompile group: 'junit', name: 'junit', version: '4.11'
     }
 
@@ -53,20 +65,10 @@ allprojects {
     }
 }
 
-apply plugin: 'com.github.johnrengelman.shadow'
+// force the spigot api jar to load first in the classpath
+sourceSets.main.compileClasspath = configurations.spigot + sourceSets.main.compileClasspath
 
 dependencies {
-    def version_pattern = Pattern.compile("(\\w+)-(v.+)")
-    def versions = new ArrayList()
-    for (f in file('libs').listFiles()) {
-        def m = version_pattern.matcher(f.getName())
-        if (m.find()) {
-            def version = m.group(2).replace(".jar", "")
-            versions.add(version)
-            println "Found " + version + " sources!"
-        }
-    }
-
     adapters.each { dep ->
         for (v in versions) {
             if (dep.endsWith(v)) {
@@ -76,6 +78,8 @@ dependencies {
         }
     }
 }
+
+apply plugin: 'com.github.johnrengelman.shadow'
 
 processResources {
     filesMatching('plugin.yml') {

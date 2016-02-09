@@ -51,6 +51,12 @@ public class Target {
         return as(Location.class);
     }
 
+    public Optional<Location> getAsLocation() {
+        return Optional.ofNullable(getBlock().map(Block::getLocation)
+                .orElse(getEntity().map(Entity::getLocation)
+                        .orElse(getLocation().orElse(null))));
+    }
+
     public <T> Optional<T> as(Class<T> clazz) {
         return clazz.isInstance(target) ? of(clazz.cast(target)) : empty();
     }

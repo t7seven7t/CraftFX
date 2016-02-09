@@ -136,7 +136,7 @@ public final class TriggerSpec {
                                                   Function<T, TriggerContext> function,
                                                   EventPriority priority, boolean ignoreCancelled) {
             Bukkit.getPluginManager().registerEvent(eventClazz, spec.listener,
-                    priority, new TriggerExecutor<>(spec, function), CraftFX.plugin(),
+                    priority, new TriggerExecutor<>(eventClazz, spec, function), CraftFX.plugin(),
                     ignoreCancelled);
             return Builder.this;
         }
@@ -150,14 +150,18 @@ public final class TriggerSpec {
     private static class TriggerExecutor<T extends Event> implements EventExecutor {
         private final Function<T, TriggerContext> function;
         private final TriggerSpec spec;
+        private final Class<T> clazz;
 
-        private TriggerExecutor(TriggerSpec spec, Function<T, TriggerContext> function) {
+        private TriggerExecutor(Class<T> clazz, TriggerSpec spec,
+                                Function<T, TriggerContext> function) {
+            this.clazz = clazz;
             this.spec = spec;
             this.function = function;
         }
 
         @Override
         public void execute(Listener listener, Event event) throws EventException {
+            if (!clazz.isInstance(event)) return;
             final TriggerContext context = function.apply((T) event);
             if (context == null) return;
             if (event.isAsynchronous()) {

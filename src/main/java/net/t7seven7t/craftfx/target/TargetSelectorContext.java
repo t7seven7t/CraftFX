@@ -24,6 +24,10 @@ public final class TargetSelectorContext implements DataInterface {
         this.holder = holder;
     }
 
+    public DataHolder getDataHolder() {
+        return holder;
+    }
+
     public Target getOrigin() {
         return origin;
     }
