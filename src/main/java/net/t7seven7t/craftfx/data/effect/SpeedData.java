@@ -26,9 +26,9 @@ public class SpeedData extends AbstractData {
     @Override
 
     public void onDataHolderUpdate() {
-        this.speed = get("speed", Float.class)
+        this.speed = get("speed", Double.class)
                 .map(f -> Math.abs(f) > 1 ? 1 * Math.signum(f) : f)
-                .orElse(speedDef);
+                .orElse((double) speedDef).floatValue();
     }
 
     @Override

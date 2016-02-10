@@ -32,7 +32,7 @@ public class TriggerContext implements DataInterface {
         for (Object o : targets) {
             if (o instanceof List) {
                 for (Object o1 : (List) o) {
-                    this.targets.add(o1 instanceof Target ? (Target) o : new Target(o));
+                    this.targets.add(o1 instanceof Target ? (Target) o1 : new Target(o1));
                 }
             }
             this.targets.add(o instanceof Target ? (Target) o : new Target(o));

@@ -45,7 +45,7 @@ public final class TriggerSpec {
             if (!c.getTarget().getEntity().isPresent()) return true;
             final EntityTypeData data = c.getData(EntityTypeData.class).get();
             final Optional<EntityType> optType = data.getEntityType();
-            if (optType.isPresent()) return true;
+            if (!optType.isPresent()) return true;
             return c.getTarget().getEntity(optType.get().getEntityClass()).isPresent();
         });
         // todo: add default filters like level/xp based, etc & make defaults configurable
@@ -84,7 +84,7 @@ public final class TriggerSpec {
         }
     }
 
-    private boolean isItemCorrect(Trigger trigger, ItemStack[] contents, int heldSlot) {
+    boolean isItemCorrect(Trigger trigger, ItemStack[] contents, int heldSlot) {
         final SlotData slotData = trigger.getData(SlotData.class).get();
         final ItemDefinition item = trigger.getItemDefinition();
         if (slotData.isHandSlot() && item.isSimilar(contents[heldSlot])) return true;

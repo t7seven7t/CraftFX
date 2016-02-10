@@ -101,6 +101,16 @@ public class TriggerRegistry implements Registry<TriggerSpec> {
             return opt.isPresent() && data.getMinimumStackSize() <= opt.get().getAmount()
                     && data.getMaximumStackSize() >= opt.get().getAmount();
         };
+        final Predicate<TriggerContext> equipFilter = c -> {
+            final SlotData data = c.getData(SlotData.class).get();
+            final int slot = c.getTargets().get(1).as(Integer.class).get();
+            if (data.isHandSlot() && slot != c.getInitiator().getInventory()
+                    .getHeldItemSlot()) return false;
+            for (int i : data.getSlots()) {
+                if (i == slot) return true;
+            }
+            return false;
+        };
         register(TriggerSpec.builder()
                 .aliases("hold item", "hold")
                 .data(new HoldData(0, 64))
@@ -132,6 +142,26 @@ public class TriggerRegistry implements Registry<TriggerSpec> {
                 })
                 .listener(PlayerJoinEvent.class, playerJoinFunction)
                 .filter(holdFilter)
+                .build());
+        register(TriggerSpec.builder()
+                .aliases("equip")
+                .listener(InventoryClickEvent.class, e -> {
+                    if (e.getWhoClicked() instanceof Player) {
+                        return new TriggerContext((Player) e.getWhoClicked(), e.getCursor(),
+                                e.getSlot());
+                    }
+                    return null;
+                }).filter(equipFilter)
+                .build());
+        register(TriggerSpec.builder()
+                .aliases("unequip")
+                .listener(InventoryClickEvent.class, e -> {
+                    if (e.getWhoClicked() instanceof Player) {
+                        return new TriggerContext((Player) e.getWhoClicked(), e.getCurrentItem(),
+                                e.getSlot());
+                    }
+                    return null;
+                }).filter(equipFilter)
                 .build());
         register(TriggerSpec.builder()
                 .aliases("hit entity")
