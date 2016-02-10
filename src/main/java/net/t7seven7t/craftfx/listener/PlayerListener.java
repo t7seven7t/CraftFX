@@ -85,7 +85,9 @@ public class PlayerListener implements Listener {
                         // update item
                         final ItemStack i = opt.get().getItem();
                         i.setAmount(item.getAmount());
-                        i.setDurability(item.getDurability());
+                        if (i.getType().getMaxDurability() > 0)
+                            // only update durability if the new item has it
+                            i.setDurability(item.getDurability());
                         it.set(i);
                     }
                 } else if (removeItems) {
