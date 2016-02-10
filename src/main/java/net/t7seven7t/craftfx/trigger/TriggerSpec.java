@@ -5,10 +5,12 @@ import com.google.common.collect.ImmutableList;
 import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.data.ConfigData;
 import net.t7seven7t.craftfx.data.Data;
+import net.t7seven7t.craftfx.data.trigger.EntityTypeData;
 import net.t7seven7t.craftfx.data.trigger.SlotData;
 import net.t7seven7t.craftfx.item.ItemDefinition;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.EntityType;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventException;
 import org.bukkit.event.EventPriority;
@@ -38,6 +40,14 @@ public final class TriggerSpec {
     private TriggerSpec() {
         defaultData.add(new ConfigData());
         defaultData.add(new SlotData("hand"));
+        defaultData.add(new EntityTypeData());
+        predicates.add(c -> {
+            if (!c.getTarget().getEntity().isPresent()) return true;
+            final EntityTypeData data = c.getData(EntityTypeData.class).get();
+            final Optional<EntityType> optType = data.getEntityType();
+            if (optType.isPresent()) return true;
+            return c.getTarget().getEntity(optType.get().getEntityClass()).isPresent();
+        });
         // todo: add default filters like level/xp based, etc & make defaults configurable
     }
 

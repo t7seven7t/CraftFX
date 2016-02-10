@@ -1,5 +1,7 @@
 package net.t7seven7t.craftfx.trigger;
 
+import com.google.common.collect.ImmutableList;
+
 import net.t7seven7t.craftfx.Target;
 import net.t7seven7t.craftfx.data.Data;
 import net.t7seven7t.craftfx.data.DataHolder;
@@ -9,6 +11,8 @@ import net.t7seven7t.craftfx.item.ItemDefinition;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -18,25 +22,21 @@ import java.util.function.Function;
 public class TriggerContext implements DataInterface {
 
     private final Player initiator;
-    private final Target target;
+    private final List<Target> targets = new ArrayList<>();
     ItemDefinition itemDefinition;
     TriggerSpec spec;
     DataHolder holder;
 
-    public TriggerContext(Player initiator, Object target) {
+    public TriggerContext(Player initiator, Object... targets) {
         this.initiator = initiator;
-        this.target = target instanceof Target ? (Target) target : new Target(target);
-    }
-
-    @Override
-    public String toString() {
-        return "TriggerContext{" +
-                "initiator=" + initiator +
-                ", target=" + target +
-                ", itemDefinition=" + itemDefinition +
-                ", spec=" + spec +
-                ", holder=" + holder +
-                '}';
+        for (Object o : targets) {
+            if (o instanceof List) {
+                for (Object o1 : (List) o) {
+                    this.targets.add(o1 instanceof Target ? (Target) o : new Target(o));
+                }
+            }
+            this.targets.add(o instanceof Target ? (Target) o : new Target(o));
+        }
     }
 
     /**
@@ -51,8 +51,15 @@ public class TriggerContext implements DataInterface {
         this(initiator, (Object) function);
     }
 
-    public TriggerContext(Player initiator) {
-        this(initiator, null);
+    @Override
+    public String toString() {
+        return "TriggerContext{" +
+                "initiator=" + initiator +
+                ", targets=" + targets +
+                ", itemDefinition=" + itemDefinition +
+                ", spec=" + spec +
+                ", holder=" + holder +
+                '}';
     }
 
     public TriggerSpec getSpec() {
@@ -67,8 +74,12 @@ public class TriggerContext implements DataInterface {
         return initiator;
     }
 
+    public List<Target> getTargets() {
+        return ImmutableList.copyOf(targets);
+    }
+
     public Target getTarget() {
-        return target;
+        return targets.isEmpty() ? null : targets.get(0);
     }
 
     public DataHolder getDataHolder() {
@@ -76,17 +87,17 @@ public class TriggerContext implements DataInterface {
     }
 
     public TriggerContext copy() {
-        return copy(target);
+        return copy(targets);
     }
 
     /**
      * Copies this context but changes the target to the one supplied.
      *
-     * @param target the new target
+     * @param targets the new target
      * @return a new TriggerContext
      */
-    public TriggerContext copy(Object target) {
-        TriggerContext context = new TriggerContext(initiator, target);
+    public TriggerContext copy(Object... targets) {
+        TriggerContext context = new TriggerContext(initiator, targets);
         context.spec = spec;
         // item def and holder are filled by trigger
         context.itemDefinition = itemDefinition;

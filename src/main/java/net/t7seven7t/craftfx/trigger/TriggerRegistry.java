@@ -8,6 +8,7 @@ import net.t7seven7t.craftfx.data.trigger.MoveData;
 import net.t7seven7t.craftfx.data.trigger.SlotData;
 
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -86,13 +87,13 @@ public class TriggerRegistry implements Registry<TriggerSpec> {
                 .build());
         register(TriggerSpec.builder()
                 .aliases("move")
-                .data(new MoveData(0, maxMoveDistDef))
+                .data(new MoveData(0, Double.MAX_VALUE))
                 .listener(PlayerMoveEvent.class, e -> new TriggerContext(e.getPlayer(), e.getTo()))
                 .filter(c -> {
                     final MoveData data = c.getData(MoveData.class).get();
-                    final double dist = data.getMinMoveDist();
-                    return dist <= 0 || dist < c.getInitiator().getLocation()
+                    final double dist = c.getInitiator().getLocation()
                             .distance(c.getTarget().getLocation().get());
+                    return dist >= data.getMinMoveDist() && dist <= data.getMaxMoveDist();
                 }).build());
         final Predicate<TriggerContext> holdFilter = c -> {
             final HoldData data = c.getData(HoldData.class).get();
@@ -134,9 +135,16 @@ public class TriggerRegistry implements Registry<TriggerSpec> {
                 .build());
         register(TriggerSpec.builder()
                 .aliases("hit entity")
+                .data(new HealthChangeData(0, Double.MAX_VALUE))
                 .listener(EntityDamageByEntityEvent.class, e -> e.getDamager() instanceof Player ?
-                        new TriggerContext((Player) e.getDamager(), e.getEntity()) : null)
-                .build());
+                        new TriggerContext((Player) e.getDamager(), e.getEntity(),
+                                e.getFinalDamage()) : null)
+                .filter(c -> {
+                    final HealthChangeData data = c.getData(HealthChangeData.class).get();
+                    final double damage = c.getTargets().get(1).as(Double.class).get();
+                    return damage >= data.getMinHealthChange() && damage <= data
+                            .getMaxHealthChange();
+                }).build());
         register(TriggerSpec.builder()
                 .aliases("break item")
                 .listener(PlayerItemBreakEvent.class,
@@ -168,6 +176,16 @@ public class TriggerRegistry implements Registry<TriggerSpec> {
                     final double dist = c.getTarget().getLocation().get()
                             .distance(c.getInitiator().getLocation());
                     return dist >= data.getMinMoveDist() && dist <= data.getMaxMoveDist();
+                }).build());
+        register(TriggerSpec.builder()
+                .aliases("on kill", "kill")
+                .listener(EntityDamageByEntityEvent.class, e -> {
+                    if (!(e.getEntity() instanceof LivingEntity)
+                            || !(e.getDamager() instanceof Player)) return null;
+                    if (((LivingEntity) e.getEntity()).getHealth() - e.getFinalDamage() <= 0) {
+                        return new TriggerContext((Player) e.getDamager(), e.getEntity());
+                    }
+                    return null;
                 }).build());
     }
 

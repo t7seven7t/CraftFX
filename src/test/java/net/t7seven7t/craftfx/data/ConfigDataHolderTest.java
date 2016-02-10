@@ -24,7 +24,7 @@ public class ConfigDataHolderTest {
             }
         };
         dataHolder.offer(new HoldData(10, 14));
-        dataHolder.offer(new MoveData(2, maxMoveDistDef));
+        dataHolder.offer(new MoveData(2, Double.MAX_VALUE));
 
         Optional<HoldData> holdData = dataHolder.getData(HoldData.class);
         assertTrue(holdData.isPresent());
@@ -35,7 +35,7 @@ public class ConfigDataHolderTest {
         assertTrue(moveData.isPresent());
         assertEquals(moveData.get().getMinMoveDist(), 2, 0);
 
-        dataHolder.offer(new MoveData(40, maxMoveDistDef));
+        dataHolder.offer(new MoveData(40, Double.MAX_VALUE));
         dataHolder.offer(new HoldData(41, 32));
 
         holdData = dataHolder.getData(HoldData.class);
