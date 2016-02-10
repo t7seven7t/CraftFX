@@ -37,6 +37,7 @@ public class TriggerContext implements DataInterface {
             }
             this.targets.add(o instanceof Target ? (Target) o : new Target(o));
         }
+        if (this.targets.isEmpty()) this.targets.add(new Target(null));
     }
 
     /**
@@ -79,7 +80,7 @@ public class TriggerContext implements DataInterface {
     }
 
     public Target getTarget() {
-        return targets.isEmpty() ? null : targets.get(0);
+        return targets.get(0);
     }
 
     public DataHolder getDataHolder() {
