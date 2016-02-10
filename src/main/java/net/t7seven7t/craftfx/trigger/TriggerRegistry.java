@@ -86,7 +86,7 @@ public class TriggerRegistry implements Registry<TriggerSpec> {
                 .build());
         register(TriggerSpec.builder()
                 .aliases("move")
-                .data(new MoveData(0))
+                .data(new MoveData(0, maxMoveDistDef))
                 .listener(PlayerMoveEvent.class, e -> new TriggerContext(e.getPlayer(), e.getTo()))
                 .filter(c -> {
                     final MoveData data = c.getData(MoveData.class).get();
@@ -157,14 +157,18 @@ public class TriggerRegistry implements Registry<TriggerSpec> {
                     final double damage = c.getTarget().as(Double.class).get();
                     return damage >= data.getMinHealthChange()
                             && damage <= data.getMaxHealthChange();
-                })
-                .build());
+                }).build());
         register(TriggerSpec.builder()
                 .aliases("teleport")
+                .data(new MoveData(0, Double.MAX_VALUE))
                 .listener(PlayerTeleportEvent.class,
                         e -> new TriggerContext(e.getPlayer(), e.getTo()))
-                        // todo: add teleport data and min distance filter, maybe causes as well
-                .build());
+                .filter(c -> {
+                    final MoveData data = c.getData(MoveData.class).get();
+                    final double dist = c.getTarget().getLocation().get()
+                            .distance(c.getInitiator().getLocation());
+                    return dist >= data.getMinMoveDist() && dist <= data.getMaxMoveDist();
+                }).build());
     }
 
 }
