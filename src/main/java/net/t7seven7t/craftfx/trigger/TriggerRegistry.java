@@ -2,20 +2,26 @@ package net.t7seven7t.craftfx.trigger;
 
 import net.t7seven7t.craftfx.Registry;
 import net.t7seven7t.craftfx.data.trigger.ChatData;
+import net.t7seven7t.craftfx.data.trigger.HealthChangeData;
 import net.t7seven7t.craftfx.data.trigger.HoldData;
 import net.t7seven7t.craftfx.data.trigger.MoveData;
 import net.t7seven7t.craftfx.data.trigger.SlotData;
 
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerItemBreakEvent;
+import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
@@ -114,7 +120,8 @@ public class TriggerRegistry implements Registry<TriggerSpec> {
                 .data(new HoldData(0, 64))
                 .listener(PlayerItemHeldEvent.class, e -> new TriggerContext(e.getPlayer(),
                                 e.getPlayer().getInventory().getItem(e.getPreviousSlot())),
-                        EventPriority.LOW) // low priority executed before normal
+                        // execute before hold trigger on monitor priority
+                        EventPriority.HIGHEST)
                 .listener(InventoryClickEvent.class, e -> {
                     if (e.getWhoClicked() instanceof Player
                             && e.getSlot() == e.getWhoClicked().getInventory().getHeldItemSlot()) {
@@ -128,8 +135,35 @@ public class TriggerRegistry implements Registry<TriggerSpec> {
         register(TriggerSpec.builder()
                 .aliases("hit entity")
                 .listener(EntityDamageByEntityEvent.class, e -> e.getDamager() instanceof Player ?
-                                new TriggerContext((Player) e.getDamager(), e.getEntity()) : null,
-                        EventPriority.MONITOR, false)
+                        new TriggerContext((Player) e.getDamager(), e.getEntity()) : null)
+                .build());
+        register(TriggerSpec.builder()
+                .aliases("break item")
+                .listener(PlayerItemBreakEvent.class,
+                        e -> new TriggerContext(e.getPlayer(), e.getBrokenItem()))
+                .build());
+        register(TriggerSpec.builder()
+                .aliases("consume item", "consume")
+                .listener(PlayerItemConsumeEvent.class,
+                        e -> new TriggerContext(e.getPlayer(), e.getItem()))
+                .build());
+        register(TriggerSpec.builder()
+                .aliases("change health", "modify health")
+                .data(new HealthChangeData(-20, 20))
+                .listener(EntityDamageEvent.class, e -> e.getEntityType() == EntityType.PLAYER ?
+                        new TriggerContext((Player) e.getEntity(), e.getFinalDamage()) : null)
+                .filter(c -> {
+                    final HealthChangeData data = c.getData(HealthChangeData.class).get();
+                    final double damage = c.getTarget().as(Double.class).get();
+                    return damage >= data.getMinHealthChange()
+                            && damage <= data.getMaxHealthChange();
+                })
+                .build());
+        register(TriggerSpec.builder()
+                .aliases("teleport")
+                .listener(PlayerTeleportEvent.class,
+                        e -> new TriggerContext(e.getPlayer(), e.getTo()))
+                        // todo: add teleport data and min distance filter, maybe causes as well
                 .build());
     }
 

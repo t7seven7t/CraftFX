@@ -124,12 +124,18 @@ public final class TriggerSpec {
         public <T extends Event> Builder listener(Class<T> eventClazz,
                                                   Function<T, TriggerContext> function,
                                                   EventPriority priority) {
-            return listener(eventClazz, function, priority, true);
+            return listener(eventClazz, function, priority, false);
         }
 
         public <T extends Event> Builder listener(Class<T> eventClazz,
                                                   Function<T, TriggerContext> function) {
-            return listener(eventClazz, function, EventPriority.NORMAL);
+            return listener(eventClazz, function, EventPriority.MONITOR);
+        }
+
+        public <T extends Event> Builder listener(Class<T> eventClazz,
+                                                  Function<T, TriggerContext> function,
+                                                  boolean ignoreCancelled) {
+            return listener(eventClazz, function, EventPriority.MONITOR, ignoreCancelled);
         }
 
         public <T extends Event> Builder listener(Class<T> eventClazz,
