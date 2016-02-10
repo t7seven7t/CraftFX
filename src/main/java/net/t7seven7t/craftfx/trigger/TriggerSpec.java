@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableList;
 import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.data.ConfigData;
 import net.t7seven7t.craftfx.data.Data;
-import net.t7seven7t.craftfx.data.trigger.EntityTypeData;
+import net.t7seven7t.craftfx.data.generic.EntityTypeData;
 import net.t7seven7t.craftfx.data.trigger.SlotData;
 import net.t7seven7t.craftfx.item.ItemDefinition;
 

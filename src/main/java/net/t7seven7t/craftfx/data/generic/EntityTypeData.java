@@ -1,4 +1,4 @@
-package net.t7seven7t.craftfx.data.trigger;
+package net.t7seven7t.craftfx.data.generic;
 
 import net.t7seven7t.craftfx.data.AbstractData;
 import net.t7seven7t.craftfx.data.Data;
