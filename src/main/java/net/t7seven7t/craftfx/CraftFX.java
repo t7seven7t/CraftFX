@@ -2,6 +2,8 @@ package net.t7seven7t.craftfx;
 
 import net.t7seven7t.craftfx.effect.EffectRegistry;
 import net.t7seven7t.craftfx.effect.EffectSpec;
+import net.t7seven7t.craftfx.event.ItemsLoadedEvent;
+import net.t7seven7t.craftfx.event.RegistriesLoadedEvent;
 import net.t7seven7t.craftfx.item.ItemLoader;
 import net.t7seven7t.craftfx.item.ItemRegistry;
 import net.t7seven7t.craftfx.listener.PlayerListener;
@@ -16,6 +18,7 @@ import net.t7seven7t.craftfx.util.LogHelper;
 
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.event.Event;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -30,11 +33,11 @@ public class CraftFX {
     private static CraftFX instance;
     private final LogHelper logHelper = new LogHelper();
     private final CraftFXPlugin plugin;
-    private final ItemRegistry itemRegistry;
-    private final Registry<TriggerSpec> triggerRegistry;
-    private final Registry<EffectSpec> effectRegistry;
-    private final Registry<TargetSelectorSpec> targetSelectorRegistry;
     private final NMSInterface nmsInterface;
+    private ItemRegistry itemRegistry;
+    private Registry<TriggerSpec> triggerRegistry;
+    private Registry<EffectSpec> effectRegistry;
+    private Registry<TargetSelectorSpec> targetSelectorRegistry;
 
     CraftFX(CraftFXPlugin plugin) {
         CraftFX.instance = this;
@@ -52,15 +55,16 @@ public class CraftFX {
             }
         });
 
-        itemRegistry = new ItemRegistry();
-        triggerRegistry = new TriggerRegistry();
-        effectRegistry = new EffectRegistry();
-        targetSelectorRegistry = new TargetSelectorRegistry();
-        ItemLoader itemLoader = new ItemLoader();
-        itemLoader.loadItems();
-
         registerListener(new RecipeListener());
         registerListener(new PlayerListener());
+
+        setupRegistries();
+        // run after all plugins have loaded
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            Event event = new RegistriesLoadedEvent();
+            Bukkit.getPluginManager().callEvent(event);
+            loadItems();
+        });
     }
 
     public static CraftFX instance() {
@@ -77,6 +81,34 @@ public class CraftFX {
 
     public static JavaPlugin plugin() {
         return instance().plugin;
+    }
+
+    private void setupRegistries() {
+        itemRegistry = new ItemRegistry();
+        triggerRegistry = new TriggerRegistry();
+        effectRegistry = new EffectRegistry();
+        targetSelectorRegistry = new TargetSelectorRegistry();
+    }
+
+    private void loadItems() {
+        ItemLoader itemLoader = new ItemLoader();
+        itemLoader.loadItems();
+        Bukkit.getPluginManager().callEvent(new ItemsLoadedEvent(itemRegistry));
+    }
+
+    public void reload() {
+        updateConfig();
+        ConfigType.values().forEach(desc -> {
+            try {
+                if (!desc.equals(ConfigType.DEFAULT)) desc.load();
+            } catch (IOException e) {
+                logHelper.severe(e.getMessage(), e);
+            }
+        });
+        setupRegistries();
+        Event event = new RegistriesLoadedEvent();
+        Bukkit.getPluginManager().callEvent(event);
+        loadItems();
     }
 
     public NMSInterface getNmsInterface() {

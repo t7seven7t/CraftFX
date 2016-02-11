@@ -17,6 +17,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * Listens to events related to item crafting
@@ -24,15 +25,15 @@ import java.util.List;
 public class RecipeListener implements Listener {
 
     private final CraftFX fx = CraftFX.instance();
-    private final ItemRegistry registry = fx.getItemRegistry();
+    private final Supplier<ItemRegistry> registry = () -> fx.getItemRegistry();
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onPrepareItemCraft(PrepareItemCraftEvent event) {
         // Check custom items aren't used in non-plugin related recipes
-        if (registry.getRecipes(event.getRecipe().getResult()).isEmpty()) {
+        if (registry.get().getRecipes(event.getRecipe().getResult()).isEmpty()) {
             for (ItemStack item : event.getInventory().getMatrix()) {
                 // If any of the items in matrix are registered they are custom
-                if (registry.getDefinition(item).isPresent()) {
+                if (registry.get().getDefinition(item).isPresent()) {
                     event.getInventory().setResult(null);
                     break;
                 }
@@ -47,17 +48,17 @@ public class RecipeListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH)
     public void onFurnaceBurn(FurnaceBurnEvent event) {
         // Block custom items being used as fuel in furnace (todo: add fuel power to items?)
-        if (registry.getDefinition(event.getFuel()).isPresent()) {
+        if (registry.get().getDefinition(event.getFuel()).isPresent()) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onFurnaceSmelt(FurnaceSmeltEvent event) {
-        List<Recipe> recipes = registry.getRecipes(event.getResult());
+        List<Recipe> recipes = registry.get().getRecipes(event.getResult());
         // Check custom items not used in non-plugin recipes
         if (recipes.isEmpty()) {
-            if (registry.getDefinition(event.getSource()).isPresent()) {
+            if (registry.get().getDefinition(event.getSource()).isPresent()) {
                 event.setCancelled(true);
             }
         }
@@ -65,7 +66,7 @@ public class RecipeListener implements Listener {
         else if (!recipes.stream().filter(r -> r instanceof FXFurnaceRecipe)
                 .map(r -> (FXFurnaceRecipe) r)
                         // Check input matches the recipe
-                .filter(r -> registry.isSimilar(r.getInput(), event.getSource()))
+                .filter(r -> registry.get().isSimilar(r.getInput(), event.getSource()))
                 .findAny().isPresent()) {
             event.setCancelled(true);
         }
@@ -74,13 +75,13 @@ public class RecipeListener implements Listener {
     @EventHandler
     public void onBrew(BrewEvent event) {
         // Block custom items being brewed into potions (todo: add custom potion recipes?)
-        if (registry.getDefinition(event.getContents().getIngredient()).isPresent()) {
+        if (registry.get().getDefinition(event.getContents().getIngredient()).isPresent()) {
             event.setCancelled(true);
         }
     }
 
     private boolean recipeMatches(ItemStack result, ItemStack[] matrix) {
-        List<Recipe> recipes = registry.getRecipes(result);
+        List<Recipe> recipes = registry.get().getRecipes(result);
         for (Recipe recipe : recipes) {
             if (recipe instanceof FXShapedRecipe) {
                 if (((FXShapedRecipe) recipe).matches(matrix)) return true;
