@@ -6,6 +6,7 @@ import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.data.ConfigData;
 import net.t7seven7t.craftfx.data.Data;
 import net.t7seven7t.craftfx.data.generic.EntityTypeData;
+import net.t7seven7t.craftfx.data.trigger.CooldownData;
 import net.t7seven7t.craftfx.data.trigger.SlotData;
 import net.t7seven7t.craftfx.item.ItemDefinition;
 
@@ -39,6 +40,7 @@ public final class TriggerSpec {
 
     private TriggerSpec() {
         defaultData.add(new ConfigData());
+        defaultData.add(new CooldownData());
         defaultData.add(new SlotData("hand"));
         defaultData.add(new EntityTypeData());
         predicates.add(c -> {

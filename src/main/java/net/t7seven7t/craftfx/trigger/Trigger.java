@@ -1,13 +1,18 @@
 package net.t7seven7t.craftfx.trigger;
 
+import com.google.common.collect.MapMaker;
+
 import net.t7seven7t.craftfx.data.ConfigDataHolder;
+import net.t7seven7t.craftfx.data.trigger.CooldownData;
 import net.t7seven7t.craftfx.effect.Effect;
 import net.t7seven7t.craftfx.effect.EffectContext;
 import net.t7seven7t.craftfx.item.ItemDefinition;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -26,6 +31,10 @@ public final class Trigger extends ConfigDataHolder {
      * Whether this trigger should only cancel ongoing effects
      */
     private final boolean canceller;
+    /**
+     * The times each player last used this trigger
+     */
+    private final Map<Player, Long> lastUseTimes;
 
     Trigger(ItemDefinition itemDefinition, ConfigurationSection config, List<Effect> effectList,
             boolean canceller) {
@@ -33,6 +42,12 @@ public final class Trigger extends ConfigDataHolder {
         this.itemDefinition = itemDefinition;
         this.effectList = effectList;
         this.canceller = canceller;
+        final CooldownData cooldownData = getData(CooldownData.class).get();
+        if (cooldownData.getCooldownMillis() != 0) {
+            lastUseTimes = new MapMaker().weakKeys().makeMap();
+        } else {
+            lastUseTimes = null;
+        }
     }
 
     public ItemDefinition getItemDefinition() {
@@ -49,6 +64,19 @@ public final class Trigger extends ConfigDataHolder {
      * @param context context
      */
     public void run(TriggerContext context) {
+        if (lastUseTimes != null) {
+            if (!lastUseTimes.containsKey(context.getInitiator())) {
+                lastUseTimes.put(context.getInitiator(), System.currentTimeMillis());
+            } else {
+                final CooldownData data = getData(CooldownData.class).get();
+                if (System.currentTimeMillis() - lastUseTimes.get(context.getInitiator())
+                        > data.getCooldownMillis()) {
+                    lastUseTimes.remove(context.getInitiator());
+                } else {
+                    return;
+                }
+            }
+        }
         // run all effects for initiator:
         // todo: get targeting params
         for (Effect effect : effectList) {
