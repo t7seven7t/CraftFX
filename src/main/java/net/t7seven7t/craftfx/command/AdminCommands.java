@@ -3,6 +3,7 @@ package net.t7seven7t.craftfx.command;
 import com.google.common.base.Joiner;
 
 import com.sk89q.intake.Command;
+import com.sk89q.intake.Require;
 import com.sk89q.intake.parametric.annotation.Optional;
 
 import net.t7seven7t.craftfx.CraftFX;
@@ -28,8 +29,8 @@ public class AdminCommands {
             desc = "command-give-desc",
             usage = "command-give-usage"
     )
-    public void give(ItemDefinition item, @Optional("sender") List<Player> players,
-                     @Optional("1") int amount) {
+    @Require("craftfx.command.give")
+    public void give(List<Player> players, ItemDefinition item, @Optional("1") int amount) {
         final ItemStack i = item.getItem();
         i.setAmount(amount);
         for (Player p : players) {
@@ -42,6 +43,7 @@ public class AdminCommands {
             desc = "command-item-desc",
             usage = "command-item-usage"
     )
+    @Require("craftfx.command.item")
     public void item(@Sender Player sender, ItemDefinition item,
                      @Optional("1") int amount) {
         final ItemStack i = item.getItem();
@@ -54,10 +56,22 @@ public class AdminCommands {
             desc = "command-list-desc",
             usage = "command-list-usage"
     )
+    @Require("craftfx.command.list")
     public void list(CraftFX fx, CommandSender sender) {
         List<ItemDefinition> items = fx.getItemRegistry().getItemDefinitions();
         message(sender, "&e%s", Joiner.on(", ").join(items.stream()
                 .map(ItemDefinition::getName).collect(Collectors.toList())));
+    }
+
+    @Command(
+            aliases = {"reload"},
+            desc = "command-reload-desc",
+            usage = "command-reload-usage"
+    )
+    @Require("craftfx.command.reload")
+    public void reload(CraftFX fx, CommandSender sender) {
+        fx.reload();
+        message(sender, "&a%s reloaded!", fx.plugin().getDescription().getFullName());
     }
 
 }
