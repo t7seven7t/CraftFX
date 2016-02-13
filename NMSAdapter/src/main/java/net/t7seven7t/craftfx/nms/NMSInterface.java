@@ -37,6 +37,14 @@ public interface NMSInterface {
     List<AttributeModifier> getAttributeModifiers(ItemStack item);
 
     /**
+     * Get a json representation of an ItemStack
+     *
+     * @param item item
+     * @return json string representation
+     */
+    String itemToJson(ItemStack item);
+
+    /**
      * Gets the value for the CraftFX NBT tag
      *
      * @param item item

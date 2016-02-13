@@ -23,6 +23,11 @@ public class FallbackNMSAdapter implements NMSInterface {
     }
 
     @Override
+    public String itemToJson(ItemStack item) {
+        return "";
+    }
+
+    @Override
     public String getCraftFXId(ItemStack item) {
         throw new UnsupportedOperationException();
     }
