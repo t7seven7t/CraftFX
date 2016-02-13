@@ -100,6 +100,7 @@ public final class TriggerSpec {
     public void addTrigger(Trigger trigger) {
         triggers.add(trigger);
         defaultData.forEach(d -> trigger.offer(d.copy()));
+        trigger.setupCooldowns();
     }
 
     @Override

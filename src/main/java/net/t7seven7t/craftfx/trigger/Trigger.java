@@ -34,7 +34,7 @@ public final class Trigger extends ConfigDataHolder {
     /**
      * The times each player last used this trigger
      */
-    private final Map<Player, Long> lastUseTimes;
+    private Map<Player, Long> lastUseTimes;
 
     Trigger(ItemDefinition itemDefinition, ConfigurationSection config, List<Effect> effectList,
             boolean canceller) {
@@ -42,6 +42,9 @@ public final class Trigger extends ConfigDataHolder {
         this.itemDefinition = itemDefinition;
         this.effectList = effectList;
         this.canceller = canceller;
+    }
+
+    void setupCooldowns() {
         final CooldownData cooldownData = getData(CooldownData.class).get();
         if (cooldownData.getCooldownMillis() != 0) {
             lastUseTimes = new MapMaker().weakKeys().makeMap();

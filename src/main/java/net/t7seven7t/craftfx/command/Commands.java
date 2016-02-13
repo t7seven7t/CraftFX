@@ -2,7 +2,9 @@ package net.t7seven7t.craftfx.command;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.MapMaker;
 
+import com.sk89q.intake.CommandCallable;
 import com.sk89q.intake.CommandException;
 import com.sk89q.intake.CommandMapping;
 import com.sk89q.intake.Intake;
@@ -10,13 +12,17 @@ import com.sk89q.intake.InvalidUsageException;
 import com.sk89q.intake.InvocationCommandException;
 import com.sk89q.intake.argument.ArgumentException;
 import com.sk89q.intake.argument.Namespace;
+import com.sk89q.intake.completion.CommandCompleter;
 import com.sk89q.intake.dispatcher.Dispatcher;
 import com.sk89q.intake.fluent.CommandGraph;
+import com.sk89q.intake.parametric.ArgumentParser;
+import com.sk89q.intake.parametric.Binding;
 import com.sk89q.intake.parametric.Injector;
 import com.sk89q.intake.parametric.ParametricBuilder;
 import com.sk89q.intake.parametric.provider.PrimitivesModule;
 import com.sk89q.intake.util.auth.AuthorizationException;
 
+import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.util.MessageUtil;
 import net.t7seven7t.util.intake.module.BukkitModule;
 
@@ -24,16 +30,22 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
  */
-public class Commands implements TabExecutor {
+public class Commands implements TabExecutor, CommandCompleter {
 
     private static final Joiner SPACE_JOINER = Joiner.on(" ");
     private final Dispatcher dispatcher;
     private final CommandGraph graph;
+    private final Map<CommandMapping, List<Binding<?>>> bindingMap = new MapMaker().makeMap();
 
     public Commands() {
         Injector injector = Intake.createInjector();
@@ -51,14 +63,51 @@ public class Commands implements TabExecutor {
         dispatcher = graph.getDispatcher();
 
         registerSubCommands("fx", new AdminCommands());
+        fixCommandCompletion(dispatcher.getCommands());
     }
 
-    public void registerCommands(Object o) {
+    private void registerCommands(Object o) {
         graph.commands().registerMethods(o);
     }
 
-    public void registerSubCommands(String group, Object o) {
+    private void registerSubCommands(String group, Object o) {
         graph.commands().group(group).registerMethods(o);
+    }
+
+    private void fixCommandCompletion(Collection<CommandMapping> commandMappings) {
+        for (CommandMapping commandMapping : commandMappings) {
+            final CommandCallable callable = commandMapping.getCallable();
+            if (callable instanceof Dispatcher) {
+                fixCommandCompletion(((Dispatcher) callable).getCommands());
+            } else if (callable.getClass().getSimpleName().equals("MethodCallable")) {
+                try {
+                    Field field = callable.getClass().getSuperclass().getDeclaredField("builder");
+                    field.setAccessible(true);
+                    final ParametricBuilder builder = (ParametricBuilder) field.get(callable);
+                    field = callable.getClass().getSuperclass().getDeclaredField("parser");
+                    field.setAccessible(true);
+                    final ArgumentParser parser = (ArgumentParser) field.get(callable);
+                    builder.setDefaultCompleter(this);
+                    field = parser.getClass().getDeclaredField("parameters");
+                    field.setAccessible(true);
+                    final List parameterList = (List) field.get(parser);
+                    if (parameterList.isEmpty()) continue;
+                    final Method bindingsMethod = parameterList.get(0).getClass()
+                            .getMethod("getBinding");
+                    bindingsMethod.setAccessible(true);
+                    final List<Binding<?>> bindings = new ArrayList<>();
+                    for (Object o : parameterList) {
+                        final Binding b = (Binding) bindingsMethod.invoke(o);
+                        if (!b.getProvider().isProvided()) bindings.add(b);
+                    }
+                    bindingMap.put(commandMapping, bindings);
+                } catch (Exception e) {
+                    CraftFX.log().severe("Error occurred while fixing tab completion for " +
+                                    "command %s",
+                            MessageUtil.translate(null, callable.getDescription().getUsage()), e);
+                }
+            }
+        }
     }
 
     public Dispatcher getDispatcher() {
@@ -119,7 +168,7 @@ public class Commands implements TabExecutor {
                 return true;
             }
             MessageUtil.message(sender, "&c" + e.getMessage());
-            CommandMapping mapping = getCommand(joinCommandArgs(command, args));
+            final CommandMapping mapping = getCommand(joinCommandArgs(command, args));
             if (mapping != null) {
                 MessageUtil.message(sender, "&cHelp: %s", MessageUtil.translate(sender,
                         // show desc if help is null
@@ -129,13 +178,14 @@ public class Commands implements TabExecutor {
         } catch (AuthorizationException e) {
             MessageUtil.message(sender, "command-authorization-exception");
         } catch (InvocationCommandException e) {
-            Throwable cause = getCause(e);
+            final Throwable cause = getCause(e);
             if (cause instanceof NumberFormatException ||
                     cause instanceof ArgumentException) {
                 MessageUtil.message(sender, "&c" + cause.getMessage());
             } else if (cause instanceof InvalidUsageException && cause.getMessage()
                     .equals("Please choose a sub-command.")) {
-                String alias = SPACE_JOINER.join(((InvalidUsageException) cause).getAliasStack());
+                final String alias = SPACE_JOINER
+                        .join(((InvalidUsageException) cause).getAliasStack());
                 MessageUtil.message(sender, "command-help-header", alias);
                 printHelp(sender, getCommand(alias));
             } else {
@@ -162,9 +212,12 @@ public class Commands implements TabExecutor {
         namespace.put(CommandSender.class, sender);
 
         if (dispatcher.testPermission(namespace)) {
+            final String joinedArgs = joinCommandArgs(command, args);
+            final CommandMapping commandMapping = getCommand(joinedArgs);
+            namespace.put(CommandMapping.class, commandMapping);
             try {
                 // todo: fix tab completion in intake or replace with something else
-                return dispatcher.getSuggestions(joinCommandArgs(command, args), namespace);
+                return dispatcher.getSuggestions(joinedArgs, namespace);
             } catch (CommandException e) {
                 // o:
             }
@@ -177,4 +230,13 @@ public class Commands implements TabExecutor {
         return command.getName() + " " + SPACE_JOINER.join(args);
     }
 
+    @Override
+    public List<String> getSuggestions(String arguments, Namespace locals) throws CommandException {
+        final CommandMapping mapping = locals.get(CommandMapping.class);
+        final List<Binding<?>> bindings = bindingMap.get(mapping);
+        if (bindings == null || bindings.isEmpty()) return ImmutableList.of();
+        final String[] args = arguments.split(" ");
+        if (args.length > bindings.size()) return ImmutableList.of();
+        return bindings.get(args.length - 1).getProvider().getSuggestions(args[args.length - 1]);
+    }
 }
