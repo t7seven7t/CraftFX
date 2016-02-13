@@ -44,7 +44,6 @@ public final class TriggerSpec {
         defaultData.add(new SlotData("hand"));
         defaultData.add(new EntityTypeData());
         predicates.add(c -> {
-            if (!c.getTarget().getEntity().isPresent()) return true;
             final EntityTypeData data = c.getData(EntityTypeData.class).get();
             final Optional<EntityType> optType = data.getEntityType();
             if (!optType.isPresent()) return true;

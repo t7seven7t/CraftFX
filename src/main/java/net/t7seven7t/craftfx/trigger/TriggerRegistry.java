@@ -11,12 +11,15 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemBreakEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
@@ -217,6 +220,44 @@ public class TriggerRegistry implements Registry<TriggerSpec> {
                     }
                     return null;
                 }).build());
+        register(TriggerSpec.builder()
+                .aliases("left click air")
+                .listener(PlayerInteractEvent.class, e -> {
+                    if (e.getAction() == Action.LEFT_CLICK_AIR) {
+                        return new TriggerContext(e.getPlayer(), e.getPlayer());
+                    }
+                    return null;
+                })
+                .build());
+        register(TriggerSpec.builder()
+                .aliases("left click block")
+                .listener(PlayerInteractEvent.class, e -> {
+                    if (e.getAction() == Action.LEFT_CLICK_BLOCK) {
+                        return new TriggerContext(e.getPlayer(), e.getClickedBlock());
+                    }
+                    return null;
+                }).build());
+        register(TriggerSpec.builder()
+                .aliases("right click air")
+                .listener(PlayerInteractEvent.class, e -> {
+                    if (e.getAction() == Action.RIGHT_CLICK_AIR) {
+                        return new TriggerContext(e.getPlayer(), e.getPlayer());
+                    }
+                    return null;
+                }).build());
+        register(TriggerSpec.builder()
+                .aliases("right click block")
+                .listener(PlayerInteractEvent.class, e -> {
+                    if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
+                        return new TriggerContext(e.getPlayer(), e.getClickedBlock());
+                    }
+                    return null;
+                }).build());
+        register(TriggerSpec.builder()
+                .aliases("right click entity")
+                .listener(PlayerInteractEntityEvent.class, e ->
+                        new TriggerContext(e.getPlayer(), e.getRightClicked()))
+                .build());
     }
 
 }
