@@ -214,9 +214,10 @@ public class PlayerArgumentProvider<T> implements Provider<T> {
         if (prefix.startsWith("@")) {
             return TARGET_SELECTORS;
         }
-
-        return Bukkit.getOnlinePlayers().stream().filter(
-                player -> player.getName().startsWith(prefix)).map(Player::getName)
+        final String lower = prefix.toLowerCase();
+        return Bukkit.getOnlinePlayers().stream()
+                .filter(player -> player.getName().toLowerCase().startsWith(lower))
+                .map(Player::getName)
                 .collect(Collectors.toList());
     }
 
