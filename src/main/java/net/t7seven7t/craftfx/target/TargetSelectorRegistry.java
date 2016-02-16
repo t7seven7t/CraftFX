@@ -7,7 +7,9 @@ import net.t7seven7t.craftfx.Target;
 import net.t7seven7t.craftfx.data.effect.TargetSelectorData;
 
 import org.bukkit.Location;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -72,6 +74,11 @@ public class TargetSelectorRegistry implements Registry<TargetSelectorSpec> {
                         .map(Target::new).map(ImmutableList::of).orElse(ImmutableList.of());
             }
         };
+        final TargetAdapter toBlock = c -> {
+            final Optional<Block> optBlock = c.getOrigin().getAsBlock();
+            if (optBlock.isPresent()) return ImmutableList.of(c.getOrigin());
+            return ImmutableList.of();
+        };
         register(defaultSpec);
         register(TargetSelectorSpec.builder()
                 .aliases("player")
@@ -82,7 +89,11 @@ public class TargetSelectorRegistry implements Registry<TargetSelectorSpec> {
                 .adapter(toEntity)
                 .build());
         register(TargetSelectorSpec.builder()
-                .aliases("aoe-entity")
+                .aliases("block")
+                .adapter(toBlock)
+                .build());
+        register(TargetSelectorSpec.builder()
+                .aliases("aoe entity")
                 .adapter(c -> {
                     // get entities around the origin
                     final Location origin = c.getOrigin().getAsLocation().orElse(null);
@@ -91,13 +102,32 @@ public class TargetSelectorRegistry implements Registry<TargetSelectorSpec> {
                     final double radius = data.getAoeRadius();
                     return origin.getWorld().getNearbyEntities(origin, radius, radius, radius)
                             .stream()
-                            .limit(data.getLimit())
                             .sorted(Comparator.comparingDouble(e ->
                                     e.getLocation().distance(origin)))
                             .map(e -> toEntity.apply(new TargetSelectorContext(new Target(e),
                                     c.getInitiator(), c.getDataHolder())))
                             .filter(e -> !e.isEmpty())
+                            .limit(data.getLimit())
                             .map(e -> e.get(0))
+                            .collect(Collectors.toList());
+                }).build());
+        register(TargetSelectorSpec.builder()
+                .aliases("aoe player")
+                .adapter(c -> {
+                    final Location origin = c.getOrigin().getAsLocation().orElse(null);
+                    if (origin == null) return ImmutableList.of();
+                    final TargetSelectorData data = c.getData(TargetSelectorData.class).get();
+                    final double radius = data.getAoeRadius();
+                    return origin.getWorld().getNearbyEntities(origin, radius, radius, radius)
+                            .stream()
+                            .filter(e -> e instanceof Player)
+                            .sorted(Comparator.comparingDouble(p ->
+                                    p.getLocation().distance(origin)))
+                            .map(p -> toPlayer.apply(new TargetSelectorContext(new Target(p),
+                                    c.getInitiator(), c.getDataHolder())))
+                            .filter(p -> !p.isEmpty())
+                            .limit(data.getLimit())
+                            .map(l -> l.get(0))
                             .collect(Collectors.toList());
                 }).build());
     }

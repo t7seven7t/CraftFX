@@ -57,6 +57,12 @@ public class Target {
                         .orElse(getLocation().orElse(null))));
     }
 
+    public Optional<Block> getAsBlock() {
+        final Optional<Block> optBlock = getBlock();
+        if (optBlock.isPresent()) return optBlock;
+        return Optional.ofNullable(getAsLocation().map(l -> l.getBlock()).orElse(null));
+    }
+
     public <T> Optional<T> as(Class<T> clazz) {
         return clazz.isInstance(target) ? of(clazz.cast(target)) : empty();
     }
