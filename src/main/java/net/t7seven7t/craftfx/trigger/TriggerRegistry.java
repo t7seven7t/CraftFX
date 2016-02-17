@@ -258,6 +258,7 @@ public class TriggerRegistry implements Registry<TriggerSpec> {
                 .listener(PlayerInteractEntityEvent.class, e ->
                         new TriggerContext(e.getPlayer(), e.getRightClicked()))
                 .build());
+        // .
     }
 
 }
