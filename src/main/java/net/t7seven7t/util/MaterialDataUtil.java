@@ -1,5 +1,9 @@
 package net.t7seven7t.util;
 
+import com.sk89q.worldedit.WorldEdit;
+import com.sk89q.worldedit.blocks.ItemType;
+
+import org.bukkit.Bukkit;
 import org.bukkit.CoalType;
 import org.bukkit.DyeColor;
 import org.bukkit.GrassSpecies;
@@ -26,13 +30,25 @@ import static org.bukkit.Material.matchMaterial;
  */
 public class MaterialDataUtil {
 
+    private static final WorldEdit worldedit;
+
+    static {
+        if (Bukkit.getPluginManager().isPluginEnabled("WorldEdit")) {
+            worldedit = WorldEdit.getInstance();
+        } else {
+            worldedit = null;
+        }
+    }
+
     public static MaterialData getMaterialData(String identifier) {
-        String[] split = identifier.replaceAll("\\s+", "_").split("\\W");
+        final String[] split = identifier.replaceAll("\\s+", "_").split("\\W");
         // TODO: Add additional material/name database like essentials/worldedit have
         Material material = matchMaterial(split[0]);
 
         if (material == null) {
-            return null;
+            // try worldedit
+            material = getWEMaterial(split[0]);
+            if (material == null) return null;
         }
 
         if (split.length == 1) {
@@ -40,7 +56,7 @@ public class MaterialDataUtil {
         }
 
         try {
-            byte rawData = Byte.parseByte(split[1]);
+            final byte rawData = Byte.parseByte(split[1]);
             return new MaterialData(material, rawData);
         } catch (NumberFormatException e) {
             // ignore
@@ -73,8 +89,14 @@ public class MaterialDataUtil {
     private static <V extends Enum<V>> MaterialData getMaterialData(Material material,
                                                                     Function<V, MaterialData> factory,
                                                                     Class<V> enumClass, String id) {
-        V result = EnumUtil.matchEnumValue(enumClass, id);
+        final V result = EnumUtil.matchEnumValue(enumClass, id);
         return result == null ? new MaterialData(material) : factory.apply(result);
+    }
+
+    private static Material getWEMaterial(String identifier) {
+        if (worldedit == null) return null;
+        final ItemType type = ItemType.lookup(identifier);
+        return type == null ? null : Material.getMaterial(type.getID());
     }
 
 }
