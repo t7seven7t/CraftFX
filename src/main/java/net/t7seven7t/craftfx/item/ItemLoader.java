@@ -94,10 +94,15 @@ public class ItemLoader {
             return ret;
         }
 
-        final Pattern p = Pattern.compile("\\.jar$");
+        final Pattern p = Pattern.compile("\\.yml$");
         for (File file : itemsFolder.listFiles()) {
             if (p.matcher(file.getName()).find()) {
-                ret.add(YamlConfiguration.loadConfiguration(file));
+                try {
+                    ret.add(YamlConfiguration.loadConfiguration(file));
+                } catch (Exception e) {
+                    CraftFX.log().severe("Caught exception trying to load item file '%s'",
+                            file.getName(), e);
+                }
             }
         }
 

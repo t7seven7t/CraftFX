@@ -30,6 +30,9 @@ public class RecipeLoader {
 
         final RecipeType type = EnumUtil.matchEnumValue(RecipeType.class, config.getString("type"));
         final List<Ingredient> ingredients = getIngredients(config.getStringList("ingredients"));
+        if (ingredients.isEmpty()) {
+            throw new Exception("Cannot have an empty ingredients list for " + config.getName());
+        }
 
         Recipe recipe;
 
