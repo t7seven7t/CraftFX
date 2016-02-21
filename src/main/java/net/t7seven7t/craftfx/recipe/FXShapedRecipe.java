@@ -13,7 +13,7 @@ import java.util.Map;
 /**
  * Wrapper for Bukkit's ShapedRecipe that allows setting ingredients with ItemStack info
  */
-public class FXShapedRecipe extends ShapedRecipe {
+public class FXShapedRecipe extends ShapedRecipe implements FXRecipe {
 
     private Map<Character, ItemStack> ingredients = new HashMap<>();
     private ItemStack[] items;

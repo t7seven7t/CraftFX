@@ -7,7 +7,6 @@ import net.t7seven7t.craftfx.util.MessageUtil;
 import net.t7seven7t.util.MaterialDataUtil;
 import net.t7seven7t.util.PotionEffectUtil;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -336,7 +335,7 @@ public class ItemLoader {
     private void postLoad(ItemDefinition item) throws Exception {
         loadRecipes(item);
         loadTriggers(item);
-        item.getRecipes().forEach(Bukkit::addRecipe);
+        fx.getItemRegistry().addRecipes(item);
     }
 
     /**

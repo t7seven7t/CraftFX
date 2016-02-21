@@ -3,8 +3,7 @@ package net.t7seven7t.craftfx.listener;
 import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.item.ItemRegistry;
 import net.t7seven7t.craftfx.recipe.FXFurnaceRecipe;
-import net.t7seven7t.craftfx.recipe.FXShapedRecipe;
-import net.t7seven7t.craftfx.recipe.FXShapelessRecipe;
+import net.t7seven7t.craftfx.recipe.FXRecipe;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -14,8 +13,8 @@ import org.bukkit.event.inventory.FurnaceBurnEvent;
 import org.bukkit.event.inventory.FurnaceSmeltEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.Recipe;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -25,23 +24,38 @@ import java.util.function.Supplier;
 public class RecipeListener implements Listener {
 
     private final CraftFX fx = CraftFX.instance();
-    private final Supplier<ItemRegistry> registry = () -> fx.getItemRegistry();
+    private final Supplier<ItemRegistry> registry = fx::getItemRegistry;
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onPrepareItemCraft(PrepareItemCraftEvent event) {
         // Check custom items aren't used in non-plugin related recipes
-        if (registry.get().getRecipes(event.getRecipe().getResult()).isEmpty()) {
+        final Iterator<FXRecipe> it = registry.get().getRecipes().iterator();
+        final ItemStack[] matrix = event.getInventory().getMatrix();
+        FXRecipe recipe = null;
+        while (it.hasNext()) {
+            recipe = it.next();
+            if (recipe instanceof FXFurnaceRecipe) continue;
+            if (recipe.matches(matrix)) break;
+            else recipe = null;
+        }
+
+        // recipe == null if matrix didn't match precisely
+        if (recipe == null) {
+            // make sure if this is a custom item it matches the recipe
+            if (registry.get().getDefinition(event.getRecipe().getResult()).isPresent()) {
+                event.getInventory().setResult(null);
+                return;
+            }
             for (ItemStack item : event.getInventory().getMatrix()) {
                 // If any of the items in matrix are registered they are custom
                 if (registry.get().getDefinition(item).isPresent()) {
                     event.getInventory().setResult(null);
-                    break;
+                    return;
                 }
             }
-        }
-        // Check to ensure recipe ingredients match precisely the matrix
-        else if (!recipeMatches(event.getRecipe().getResult(), event.getInventory().getMatrix())) {
-            event.getInventory().setResult(null);
+        } else {
+            // recipe result may not be what the event says since MC compresses down to material
+            event.getInventory().setResult(recipe.getResult());
         }
     }
 
@@ -55,7 +69,7 @@ public class RecipeListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onFurnaceSmelt(FurnaceSmeltEvent event) {
-        List<Recipe> recipes = registry.get().getRecipes(event.getResult());
+        final List<FXRecipe> recipes = registry.get().getRecipes(event.getResult());
         // Check custom items not used in non-plugin recipes
         if (recipes.isEmpty()) {
             if (registry.get().getDefinition(event.getSource()).isPresent()) {
@@ -78,17 +92,5 @@ public class RecipeListener implements Listener {
         if (registry.get().getDefinition(event.getContents().getIngredient()).isPresent()) {
             event.setCancelled(true);
         }
-    }
-
-    private boolean recipeMatches(ItemStack result, ItemStack[] matrix) {
-        List<Recipe> recipes = registry.get().getRecipes(result);
-        for (Recipe recipe : recipes) {
-            if (recipe instanceof FXShapedRecipe) {
-                if (((FXShapedRecipe) recipe).matches(matrix)) return true;
-            } else if (recipe instanceof FXShapelessRecipe) {
-                if (((FXShapelessRecipe) recipe).matches(matrix)) return true;
-            }
-        }
-        return false;
     }
 }

@@ -1,9 +1,12 @@
 package net.t7seven7t.craftfx.recipe;
 
+import com.google.common.base.Joiner;
+
 import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.item.ItemRegistry;
 
 import org.apache.commons.lang.Validate;
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapelessRecipe;
 
@@ -12,16 +15,14 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
  * Wrapper for Bukkit's ShapelessRecipe that allows setting ingredients with ItemStack data
  */
-public class FXShapelessRecipe extends ShapelessRecipe {
+public class FXShapelessRecipe extends ShapelessRecipe implements FXRecipe {
 
     private final List<ItemStack> ingredients = new ArrayList<>();
-    private Map<ItemStack, Integer> itemCounts;
 
     /**
      * {@inheritDoc}
@@ -70,44 +71,43 @@ public class FXShapelessRecipe extends ShapelessRecipe {
         return ingredients.stream().map(ItemStack::clone).collect(Collectors.toList());
     }
 
+    @Override
+    public String toString() {
+        final Map<ItemStack, Integer> amounts = new HashMap<>();
+        for (ItemStack is : ingredients) {
+            if (!amounts.containsKey(is)) amounts.put(is, 0);
+            amounts.put(is, amounts.get(is) + 1);
+        }
+        final String ingredients = Joiner.on(", ").join(amounts.entrySet().stream().map(e -> {
+            if (e.getKey().hasItemMeta() && e.getKey().getItemMeta().hasDisplayName())
+                return e.getKey().getItemMeta().getDisplayName() + " x" + e.getValue();
+            return e.getKey().getType() + " x" + e.getValue();
+        }).collect(Collectors.toList()));
+        return "FXShapelessRecipe{" + "result=" + getResult().getItemMeta().getDisplayName() +
+                ", ingredients=" + ingredients +
+                '}';
+    }
+
     /**
      * Compares an ItemMatrix with the expected input for this recipe
      */
     public boolean matches(ItemStack[] matrix) {
-        ItemRegistry registry = CraftFX.instance().getItemRegistry();
-        Map<ItemStack, Integer> matrixCount = getItemCount(matrix, registry);
-        if (itemCounts == null) {
-            itemCounts = getItemCount(ingredients.toArray(new ItemStack[0]), registry);
-        }
-        for (Map.Entry<ItemStack, Integer> entry : itemCounts.entrySet()) {
-            Optional<ItemStack> opt = registry.getMatching(entry.getKey(), matrixCount.keySet());
-            if (opt.isPresent()) {
-                if (!entry.getValue().equals(matrixCount.get(opt.get()))) {
-                    return false;
+        final ItemRegistry registry = CraftFX.instance().getItemRegistry();
+        final List<ItemStack> ingredients = new ArrayList<>(this.ingredients);
+        for (ItemStack item : matrix) {
+            if (item != null && item.getType() != Material.AIR) {
+                final Iterator<ItemStack> it = ingredients.iterator();
+                boolean exit = true;
+                while (it.hasNext()) {
+                    if (registry.isSimilar(it.next(), item)) {
+                        it.remove();
+                        exit = false;
+                        break;
+                    }
                 }
+                if (exit) return false;
             }
         }
-        return true;
-    }
-
-    /**
-     * Gets a map of item counts
-     */
-    private Map<ItemStack, Integer> getItemCount(ItemStack[] items, ItemRegistry registry) {
-        Map<ItemStack, Integer> result = new HashMap<>();
-        for (ItemStack item : items) {
-            boolean counted = false;
-            for (Map.Entry<ItemStack, Integer> entry : result.entrySet()) {
-                if (registry.isSimilar(entry.getKey(), item)) {
-                    entry.setValue(entry.getValue() + 1);
-                    counted = true;
-                    break;
-                }
-            }
-            if (!counted) {
-                result.put(item, 1);
-            }
-        }
-        return result;
+        return ingredients.isEmpty();
     }
 }

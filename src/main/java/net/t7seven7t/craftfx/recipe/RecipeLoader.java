@@ -6,11 +6,7 @@ import net.t7seven7t.util.EnumUtil;
 import net.t7seven7t.util.MaterialDataUtil;
 
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.inventory.FurnaceRecipe;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.Recipe;
-import org.bukkit.inventory.ShapedRecipe;
-import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.material.MaterialData;
 
 import java.util.ArrayList;
@@ -22,7 +18,7 @@ import java.util.Optional;
  */
 public class RecipeLoader {
 
-    public Recipe load(ItemDefinition item, ConfigurationSection config) throws Exception {
+    public FXRecipe load(ItemDefinition item, ConfigurationSection config) throws Exception {
         final ItemStack result = item.getItem(); // cloned
         // amount the recipe should produce
         final int amount = config.getInt("amount", 1);
@@ -34,7 +30,7 @@ public class RecipeLoader {
             throw new Exception("Cannot have an empty ingredients list for " + config.getName());
         }
 
-        Recipe recipe;
+        FXRecipe recipe;
 
         switch (type) {
             case SHAPED:
@@ -53,8 +49,8 @@ public class RecipeLoader {
         return recipe;
     }
 
-    private ShapedRecipe getShapedRecipe(List<Ingredient> ingredients, ItemStack item,
-                                         ConfigurationSection config) {
+    private FXShapedRecipe getShapedRecipe(List<Ingredient> ingredients, ItemStack item,
+                                           ConfigurationSection config) {
         FXShapedRecipe recipe = new FXShapedRecipe(item);
         List<String> shape = config.getStringList("shape");
         recipe.shape(shape.toArray(new String[0]));
@@ -62,13 +58,13 @@ public class RecipeLoader {
         return recipe;
     }
 
-    private ShapelessRecipe getShapelessRecipe(List<Ingredient> ingredients, ItemStack item) {
+    private FXShapelessRecipe getShapelessRecipe(List<Ingredient> ingredients, ItemStack item) {
         FXShapelessRecipe recipe = new FXShapelessRecipe(item);
         ingredients.forEach(recipe::addIngredient);
         return recipe;
     }
 
-    private FurnaceRecipe getFurnaceRecipe(List<Ingredient> ingredients, ItemStack item) {
+    private FXFurnaceRecipe getFurnaceRecipe(List<Ingredient> ingredients, ItemStack item) {
         return new FXFurnaceRecipe(item, ingredients.get(0).item);
     }
 

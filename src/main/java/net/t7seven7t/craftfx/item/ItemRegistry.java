@@ -1,18 +1,20 @@
 package net.t7seven7t.craftfx.item;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MapMaker;
 
 import net.md_5.bungee.api.ChatColor;
 import net.t7seven7t.craftfx.CraftFX;
+import net.t7seven7t.craftfx.recipe.FXRecipe;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.Recipe;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -25,8 +27,9 @@ public class ItemRegistry {
     /**
      * List of all item definitions
      */
-    private final Set<ItemDefinition> itemDefinitionList = Collections
+    private final Set<ItemDefinition> itemDefinitionSet = Collections
             .newSetFromMap(new MapMaker().makeMap());
+    private final Set<FXRecipe> recipeSet = new HashSet<>();
 
     /**
      * Registers an item definition into this ItemRegistry. Recipes will be registered with the
@@ -35,7 +38,12 @@ public class ItemRegistry {
      * @param item ItemDefinition to register
      */
     public void register(ItemDefinition item) {
-        itemDefinitionList.add(item);
+        itemDefinitionSet.add(item);
+    }
+
+    public void addRecipes(ItemDefinition item) {
+        item.getRecipes().forEach(Bukkit::addRecipe);
+        recipeSet.addAll(item.getRecipes());
     }
 
     /**
@@ -45,16 +53,20 @@ public class ItemRegistry {
      * @return true if the definition has already been registered
      */
     public boolean contains(ItemDefinition item) {
-        return itemDefinitionList.contains(item);
+        return itemDefinitionSet.contains(item);
     }
 
     /**
-     * Gets a list contianing all the ItemDefinitions that are registered
+     * Gets a list containing all the ItemDefinitions that are registered
      *
      * @return list of all ItemDefinitions
      */
     public List<ItemDefinition> getItemDefinitions() {
-        return ImmutableList.copyOf(itemDefinitionList);
+        return ImmutableList.copyOf(itemDefinitionSet);
+    }
+
+    public Collection<FXRecipe> getRecipes() {
+        return ImmutableSet.copyOf(recipeSet);
     }
 
     /**
@@ -63,7 +75,7 @@ public class ItemRegistry {
      * @param item the ItemStack
      * @return A list of recipes
      */
-    public List<Recipe> getRecipes(ItemStack item) {
+    public List<FXRecipe> getRecipes(ItemStack item) {
         final Optional<ItemDefinition> opt = getDefinition(item);
         return opt.map(ItemDefinition::getRecipes).orElse(ImmutableList.of());
     }
@@ -100,13 +112,13 @@ public class ItemRegistry {
         if (exact.isPresent()) return exact;
         final String lower = ChatColor.stripColor(name).toLowerCase();
         final String lowerStripped = lower.replaceAll("\\s+", "_");
-        for (ItemDefinition def : itemDefinitionList) {
+        for (ItemDefinition def : itemDefinitionSet) {
             if (def.getName().startsWith(lowerStripped) || def.getName().startsWith(lower)) {
                 return Optional.of(def);
             }
         }
 
-        for (ItemDefinition def : itemDefinitionList) {
+        for (ItemDefinition def : itemDefinitionSet) {
             if (ChatColor.stripColor(def.getDisplayName()).startsWith(lower)) {
                 return Optional.of(def);
             }
@@ -121,7 +133,7 @@ public class ItemRegistry {
      * @return An Optional containing ItemDefinition if found, otherwise Optional.empty()
      */
     public Optional<ItemDefinition> getDefinition(ItemStack item) {
-        for (ItemDefinition def : itemDefinitionList) {
+        for (ItemDefinition def : itemDefinitionSet) {
             if (def.isSimilar(item)) {
                 return Optional.of(def);
             }
@@ -139,13 +151,13 @@ public class ItemRegistry {
     public Optional<ItemDefinition> getDefinition(String name) {
         final String lower = ChatColor.stripColor(name).toLowerCase();
         final String lowerStripped = lower.replaceAll("\\s+", "_");
-        for (ItemDefinition def : itemDefinitionList) {
+        for (ItemDefinition def : itemDefinitionSet) {
             if (lowerStripped.equals(def.getName()) || lower.equals(def.getName())) {
                 return Optional.of(def);
             }
         }
 
-        for (ItemDefinition def : itemDefinitionList) {
+        for (ItemDefinition def : itemDefinitionSet) {
             if (lower.equalsIgnoreCase(ChatColor.stripColor(def.getDisplayName()))) {
                 return Optional.of(def);
             }

@@ -2,11 +2,11 @@ package net.t7seven7t.craftfx.item;
 
 import net.md_5.bungee.api.ChatColor;
 import net.t7seven7t.craftfx.CraftFX;
+import net.t7seven7t.craftfx.recipe.FXRecipe;
 import net.t7seven7t.craftfx.util.MessageUtil;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.Recipe;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +31,7 @@ public class ItemDefinition {
     /**
      * List of recipes that can create this item
      */
-    final List<Recipe> recipeList;
+    final List<FXRecipe> recipeList;
     /**
      * The display name of this item
      */
@@ -90,7 +90,7 @@ public class ItemDefinition {
         return config;
     }
 
-    public List<Recipe> getRecipes() {
+    public List<FXRecipe> getRecipes() {
         return recipeList;
     }
 
