@@ -25,4 +25,12 @@ public interface DataHolder extends DataInterface {
      */
     <T> Optional<T> get(String propertyName, Class<T> clazz);
 
+    /**
+     * Sets a property for this DataHolder
+     *
+     * @param propertyName the property name
+     * @param value        new value of the property
+     */
+    void set(String propertyName, Object value);
+
 }

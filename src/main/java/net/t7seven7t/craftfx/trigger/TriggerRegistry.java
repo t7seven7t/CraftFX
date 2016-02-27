@@ -48,6 +48,12 @@ public class TriggerRegistry implements Registry<TriggerSpec> {
         initDefaults();
     }
 
+    /**
+     * Registers a TriggerSpec
+     *
+     * @param spec TriggerSpec to register
+     * @throws IllegalArgumentException if a TriggerSpec is already registered with the same alias
+     */
     @Override
     public void register(TriggerSpec spec) {
         for (String alias : spec.getAliases()) {

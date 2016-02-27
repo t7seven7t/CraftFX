@@ -2,15 +2,19 @@ package net.t7seven7t.craftfx.trigger;
 
 import com.google.common.collect.MapMaker;
 
+import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.data.ConfigDataHolder;
 import net.t7seven7t.craftfx.data.trigger.CooldownData;
 import net.t7seven7t.craftfx.effect.Effect;
 import net.t7seven7t.craftfx.effect.EffectContext;
 import net.t7seven7t.craftfx.item.ItemDefinition;
 
+import org.apache.commons.lang.Validate;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -32,16 +36,31 @@ public final class Trigger extends ConfigDataHolder {
      */
     private final boolean canceller;
     /**
+     * The TriggerSpec for this Trigger
+     */
+    private final TriggerSpec spec;
+    /**
      * The times each player last used this trigger
      */
     private Map<Player, Long> lastUseTimes;
 
-    Trigger(ItemDefinition itemDefinition, ConfigurationSection config, List<Effect> effectList,
+    Trigger(TriggerSpec spec, ItemDefinition itemDefinition, ConfigurationSection config,
+            List<Effect> effectList,
             boolean canceller) {
         super(config);
+        this.spec = spec;
         this.itemDefinition = itemDefinition;
         this.effectList = effectList;
         this.canceller = canceller;
+        spec.addTrigger(this);
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public TriggerSpec getSpec() {
+        return spec;
     }
 
     void setupCooldowns() {
@@ -99,4 +118,47 @@ public final class Trigger extends ConfigDataHolder {
         context.itemDefinition = this.itemDefinition;
     }
 
+    public static class Builder {
+
+        private final List<Effect> effectList = new ArrayList<>();
+        private final ConfigurationSection config = new MemoryConfiguration();
+        private TriggerSpec spec;
+        private ItemDefinition itemDefinition;
+        private boolean canceller;
+
+        public Builder item(ItemDefinition item) {
+            this.itemDefinition = item;
+            return this;
+        }
+
+        public Builder spec(String alias) {
+            return spec(CraftFX.instance().getTriggerRegistry().getSpec(alias).orElse(this.spec));
+        }
+
+        public Builder spec(TriggerSpec spec) {
+            this.spec = spec;
+            return this;
+        }
+
+        public Builder cancels(boolean cancels) {
+            this.canceller = cancels;
+            return this;
+        }
+
+        public Builder effect(Effect effect) {
+            this.effectList.add(effect);
+            return this;
+        }
+
+        public Builder property(String propertyName, Object value) {
+            config.set(propertyName, value);
+            return this;
+        }
+
+        public Trigger build() {
+            Validate.notNull(itemDefinition, "ItemDefinition cannot be null");
+            Validate.notNull(spec, "TriggerSpec cannot be null");
+            return new Trigger(spec, itemDefinition, config, effectList, canceller);
+        }
+    }
 }

@@ -36,6 +36,17 @@ public class ConfigDataHolder implements DataHolder {
         return clazz.isInstance(o) ? Optional.of((T) o) : Optional.<T>empty();
     }
 
+    /**
+     * Sets a property for this DataHolder
+     *
+     * @param propertyName the property name
+     * @param value        new value of the property
+     */
+    @Override
+    public void set(String propertyName, Object value) {
+        config.set(propertyName, value);
+    }
+
     public ConfigurationSection getConfig() {
         return config;
     }

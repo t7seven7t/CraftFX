@@ -10,8 +10,10 @@ import net.t7seven7t.craftfx.data.effect.ExtentData;
 import net.t7seven7t.craftfx.data.effect.TargetSelectorData;
 import net.t7seven7t.craftfx.data.effect.TimerData;
 
+import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -111,5 +113,29 @@ public final class Effect extends ConfigDataHolder {
 
     private EffectContext getLastContext(Player player) {
         return contextMap == null ? null : contextMap.get(player);
+    }
+
+    public static class Builder {
+        private final ConfigurationSection config = new MemoryConfiguration();
+        private EffectSpec spec;
+
+        public Builder spec(String alias) {
+            return spec(CraftFX.instance().getEffectRegistry().getSpec(alias).orElse(this.spec));
+        }
+
+        public Builder spec(EffectSpec spec) {
+            this.spec = spec;
+            return this;
+        }
+
+        public Builder property(String propertyName, Object value) {
+            config.set(propertyName, value);
+            return this;
+        }
+
+        public Effect build() {
+            Validate.notNull(spec, "EffectSpec cannot be null");
+            return spec.newEffect(config);
+        }
     }
 }

@@ -68,8 +68,7 @@ public class TriggerLoader {
                                 List<Effect> effectList, boolean canceller) throws Exception {
         final Optional<TriggerSpec> opt = CraftFX.instance().getTriggerRegistry().getSpec(type);
         if (!opt.isPresent()) throw new Exception("Trigger type '" + type + "' isn't registered.");
-        final Trigger trigger = new Trigger(item, config, effectList, canceller);
-        opt.get().addTrigger(trigger);
+        final Trigger trigger = new Trigger(opt.get(), item, config, effectList, canceller);
         return trigger;
     }
 
