@@ -5,6 +5,7 @@ import com.google.common.collect.MapMaker;
 
 import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.data.ConfigDataHolder;
+import net.t7seven7t.craftfx.data.Data;
 import net.t7seven7t.craftfx.data.effect.DelayData;
 import net.t7seven7t.craftfx.data.effect.ExtentData;
 import net.t7seven7t.craftfx.data.effect.TargetSelectorData;
@@ -17,6 +18,8 @@ import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -121,6 +124,7 @@ public final class Effect extends ConfigDataHolder {
 
     public static class Builder {
         private final ConfigurationSection config = new MemoryConfiguration();
+        private final List<Data> dataList = new ArrayList<>();
         private EffectSpec spec;
 
         public Builder spec(String alias) {
@@ -132,6 +136,11 @@ public final class Effect extends ConfigDataHolder {
             return this;
         }
 
+        public Builder data(Data data) {
+            this.dataList.add(data);
+            return this;
+        }
+
         public Builder property(String propertyName, Object value) {
             config.set(propertyName, value);
             return this;
@@ -139,7 +148,9 @@ public final class Effect extends ConfigDataHolder {
 
         public Effect build() {
             Validate.notNull(spec, "EffectSpec cannot be null");
-            return spec.newEffect(config);
+            final Effect effect = spec.newEffect(config);
+            dataList.forEach(effect::offer);
+            return effect;
         }
     }
 }

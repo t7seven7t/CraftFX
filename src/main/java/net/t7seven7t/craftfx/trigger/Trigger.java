@@ -4,6 +4,7 @@ import com.google.common.collect.MapMaker;
 
 import net.t7seven7t.craftfx.CraftFX;
 import net.t7seven7t.craftfx.data.ConfigDataHolder;
+import net.t7seven7t.craftfx.data.Data;
 import net.t7seven7t.craftfx.data.trigger.CooldownData;
 import net.t7seven7t.craftfx.effect.Effect;
 import net.t7seven7t.craftfx.effect.EffectContext;
@@ -121,6 +122,7 @@ public final class Trigger extends ConfigDataHolder {
     public static class Builder {
 
         private final List<Effect> effectList = new ArrayList<>();
+        private final List<Data> dataList = new ArrayList<>();
         private final ConfigurationSection config = new MemoryConfiguration();
         private TriggerSpec spec;
         private ItemDefinition itemDefinition;
@@ -150,6 +152,11 @@ public final class Trigger extends ConfigDataHolder {
             return this;
         }
 
+        public Builder data(Data data) {
+            this.dataList.add(data);
+            return this;
+        }
+
         public Builder property(String propertyName, Object value) {
             config.set(propertyName, value);
             return this;
@@ -158,7 +165,12 @@ public final class Trigger extends ConfigDataHolder {
         public Trigger build() {
             Validate.notNull(itemDefinition, "ItemDefinition cannot be null");
             Validate.notNull(spec, "TriggerSpec cannot be null");
-            return new Trigger(spec, itemDefinition, config, effectList, canceller);
+            final Trigger trigger = new Trigger(spec, itemDefinition, config, effectList,
+                    canceller);
+            dataList.forEach(trigger::offer);
+            // cooldown data may have changed
+            trigger.setupCooldowns();
+            return trigger;
         }
     }
 }
