@@ -31,10 +31,14 @@ public final class Effect extends ConfigDataHolder {
      */
     private Map<Player, EffectContext> contextMap;
 
-    public Effect(ConfigurationSection config,
-                  Map<ExtentState, Consumer<EffectContext>> consumerMap) {
+    Effect(ConfigurationSection config,
+           Map<ExtentState, Consumer<EffectContext>> consumerMap) {
         super(config);
         this.consumerMap = ImmutableMap.copyOf(consumerMap);
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     /**
