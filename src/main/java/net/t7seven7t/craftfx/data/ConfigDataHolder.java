@@ -45,6 +45,7 @@ public class ConfigDataHolder implements DataHolder {
     @Override
     public void set(String propertyName, Object value) {
         config.set(propertyName, value);
+        dataMap.values().forEach(Data::onDataHolderUpdate);
     }
 
     public ConfigurationSection getConfig() {

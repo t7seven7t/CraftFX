@@ -41,4 +41,10 @@ public interface Data {
      * @return a copy of this Data object
      */
     Data copy();
+
+    /**
+     * Called when the setDataHolder is called with a holder that is non null so that child
+     * instances have a chance to reinitialize their internal state.
+     */
+    void onDataHolderUpdate();
 }
