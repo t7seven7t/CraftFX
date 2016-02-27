@@ -11,7 +11,6 @@ import net.t7seven7t.craftfx.data.effect.ExtentData;
 import net.t7seven7t.craftfx.data.effect.TargetSelectorData;
 import net.t7seven7t.craftfx.data.effect.TimerData;
 
-import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
@@ -19,6 +18,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -125,19 +125,31 @@ public final class Effect extends ConfigDataHolder {
     public static class Builder {
         private final ConfigurationSection config = new MemoryConfiguration();
         private final List<Data> dataList = new ArrayList<>();
-        private EffectSpec spec;
+        private final Map<ExtentState, Consumer<EffectContext>> consumerMap = new HashMap<>();
 
         public Builder spec(String alias) {
-            return spec(CraftFX.instance().getEffectRegistry().getSpec(alias).orElse(this.spec));
+            CraftFX.instance().getEffectRegistry().getSpec(alias).ifPresent(this::spec);
+            return this;
         }
 
         public Builder spec(EffectSpec spec) {
-            this.spec = spec;
+            this.consumerMap.putAll(spec.consumerMap);
             return this;
         }
 
         public Builder data(Data data) {
             this.dataList.add(data);
+            return this;
+        }
+
+        public Builder consumer(ExtentState state, Consumer<EffectContext> consumer) {
+            consumerMap.put(state, consumer);
+            return this;
+        }
+
+        public Builder consumer(Consumer<EffectContext> consumer) {
+            consumerMap.put(ExtentState.END, consumer);
+            consumerMap.put(ExtentState.START, consumer);
             return this;
         }
 
@@ -147,8 +159,7 @@ public final class Effect extends ConfigDataHolder {
         }
 
         public Effect build() {
-            Validate.notNull(spec, "EffectSpec cannot be null");
-            final Effect effect = spec.newEffect(config);
+            final Effect effect = new Effect(config, consumerMap);
             dataList.forEach(effect::offer);
             return effect;
         }

@@ -35,7 +35,7 @@ public final class EffectSpec {
 
     private final List<String> aliases = new ArrayList<>();
     private final List<Data> dataList = new ArrayList<>();
-    private final Map<ExtentState, Consumer<EffectContext>> consumerMap = new IdentityHashMap<>(2);
+    final Map<ExtentState, Consumer<EffectContext>> consumerMap = new IdentityHashMap<>(2);
 
     private EffectSpec() {
     }
