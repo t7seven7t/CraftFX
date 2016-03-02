@@ -3,3 +3,5 @@ include 'NMSAdapter-v1_8_R1'
 include 'NMSAdapter-v1_8_R2'
 include 'NMSAdapter-v1_8_R3'
 include 'NMSAdapter'
+include 'NMSAdapter-v1_9_R1'
+
