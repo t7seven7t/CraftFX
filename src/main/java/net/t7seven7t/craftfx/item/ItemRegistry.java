@@ -11,10 +11,12 @@ import net.t7seven7t.craftfx.recipe.FXRecipe;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.Recipe;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -38,10 +40,22 @@ public class ItemRegistry {
      * @param item ItemDefinition to register
      */
     public void register(ItemDefinition item) {
+        getDefinition(item.getName()).ifPresent(i -> {
+            CraftFX.log().warning("Item with name '%s' was re-registered.", item.getName());
+            itemDefinitionSet.remove(i);
+        });
         itemDefinitionSet.add(item);
     }
 
     public void addRecipes(ItemDefinition item) {
+        Iterator<Recipe> it = Bukkit.recipeIterator();
+        while (it.hasNext()) {
+            final Recipe r = it.next();
+            if (item.isSimilar(r.getResult())) {
+                it.remove();
+                recipeSet.remove(r);
+            }
+        }
         item.getRecipes().forEach(Bukkit::addRecipe);
         recipeSet.addAll(item.getRecipes());
     }

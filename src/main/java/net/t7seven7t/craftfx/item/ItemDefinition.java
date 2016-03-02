@@ -176,8 +176,6 @@ public class ItemDefinition {
             final ItemRegistry registry = CraftFX.instance().getItemRegistry();
             Validate.notNull(name, "Item name cannot be null");
             Validate.notNull(item, "ItemStack cannot be null");
-            Validate.isTrue(!registry.getDefinition(name).isPresent(),
-                    "Item with the name '" + name + "' already registered.");
             final ItemDefinition itemDefinition = new ItemDefinition(name, item, recipeList);
             registry.register(itemDefinition);
             registry.addRecipes(itemDefinition);
